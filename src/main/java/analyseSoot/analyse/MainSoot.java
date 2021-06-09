@@ -13,6 +13,9 @@ import soot.SootMethod;
 import soot.Transform;
 import soot.Unit;
 
+import analyseSoot.utils.*;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +53,7 @@ public class MainSoot {
 				className.startsWith("com.google.") || className.startsWith("com.android.")) || className.startsWith("androidx") ||
 				className.startsWith("com.example.demo.R");
 	}
+	
 	public static void main(String[] args) {
 		initSoot();
 		PackManager.v().getPack("wjtp").add(new Transform("wjtp.myTransform", new SceneTransformer() {
@@ -58,24 +62,13 @@ public class MainSoot {
 				Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
 				for(SootClass c : appClasses) {
 					if(!isSystemClass(c.getName())) {
-						List<SootMethod> classMethods = c.getMethods();
-						for(SootMethod m : c.getMethods()) {
-							//System.out.println(m.retrieveActiveBody());
-							Body b = m.retrieveActiveBody();
-							UnitGraph ug = new ExceptionalUnitGraph(b);
-							/* Test d'un parcours */
-							System.out.println("------");
-							System.out.println("Parcours du graphe de " + m.getName());
-							List<Unit> iterator = ug.getHeads();
-							System.out.println(iterator);
-							while(!iterator.equals(ug.getTails())) {
-								iterator = ug.getSuccsOf(iterator.get(0));
-								System.out.println(iterator);
-								System.out.println(iterator.toString());
-							}
-							System.out.println("------");
-							/* Probleme sur mon parcours lorsque le code finit sur un if */
+						try {
+							System.out.println(c.getName());
+							utils.stringToJimple(c);
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
+						
 					}
 				}
 			}
@@ -83,3 +76,22 @@ public class MainSoot {
 		PackManager.v().runPacks();
 	}
 }
+
+/* Méthode de parcours du Graphe ?
+						System.out.println(c.getName());
+						List<SootMethod> classMethods = c.getMethods();
+						for(SootMethod m : c.getMethods()) {
+							Body b = m.retrieveActiveBody();
+							UnitGraph ug = new ExceptionalUnitGraph(b);
+							System.out.println("------");
+							System.out.println("Parcours du graphe de " + m.getName());
+							List<Unit> iterator = ug.getHeads();
+							System.out.println(iterator);
+							while(!iterator.equals(ug.getTails())) {
+								iterator = ug.getSuccsOf(iterator.get(0));
+								for(Unit s : iterator) {
+									System.out.println(iterator);
+								}
+							}
+							System.out.println("------");
+							/* Probleme sur mon parcours lorsque le code finit sur un if */
