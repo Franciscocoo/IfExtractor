@@ -1,6 +1,5 @@
 /target/
 /tmp/
-/output/*
 /.metadata/
 .git
 .settings
