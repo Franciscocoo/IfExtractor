@@ -38,7 +38,7 @@
 
         virtualinvoke $r2.<java.io.PrintStream: void println(java.lang.String)>("Branche true");
 
-        goto label3;
+        goto label4;
 
      label1:
         if i0 <= 2 goto label2;
@@ -55,6 +55,11 @@
         virtualinvoke $r2.<java.io.PrintStream: void println(java.lang.String)>("Branch false Partie 2");
 
      label3:
+        $r2 = <java.lang.System: java.io.PrintStream out>;
+
+        virtualinvoke $r2.<java.io.PrintStream: void println(java.lang.String)>("Branche false finit");
+
+     label4:
         $r2 = <java.lang.System: java.io.PrintStream out>;
 
         virtualinvoke $r2.<java.io.PrintStream: void println(java.lang.String)>("Oui");

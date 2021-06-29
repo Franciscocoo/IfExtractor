@@ -1,10 +1,16 @@
 package analyseSoot.analyse;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import analyseSoot.utils.*;
+import soot.Body;
 import soot.PackManager;
+import soot.Scene;
 import soot.SootMethod;
+import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
 
 public class test {
@@ -20,19 +26,28 @@ public class test {
 	private static String dirOutput = directory + "/output";
 	
 	public static void main(String[] args) {
-		utils.initSoot(dirAndroid, dirApk);
+		
+		/* Cleaning Output Folder */
+		final File[] files = (new File(dirOutput)).listFiles();
+		if(files != null && files.length>0) {
+			Arrays.asList(files).forEach(File::delete);
+		}
+		
 		/* GET IF BLOCK */
+		utils.initSoot(dirAndroid, dirApk);
 		ifManager.getIf();
-		//apkGenerator
-		PackManager.v().runPacks();
+		
 		/* Prints */
 		List<Stmt> l = ifManager.codeToIsolate;
 		SootMethod m = ifManager.methodToIsolate;
+		Body b = ifManager.bodyToIsolate;
 		System.out.println("****************");
 		System.out.println(m);
 		System.out.println(l);
 		System.out.println("****************");
-		//apkGenerator.constructApk(m, l, dirOutput);
-		//PackManager.v().runPacks();
+		
+		/* APK GENERATOR */
+		utils.initSoot(dirAndroid, dirApk);
+		apkGenerator.constructApk(m, b, l, dirOutput);
 	}
 }
