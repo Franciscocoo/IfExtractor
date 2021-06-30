@@ -20,7 +20,7 @@ public class test {
 	private static String dirAndroid = home + "/Android/Sdk/platforms";
 	/* */
 	private static String directory = System.getProperty("user.dir");
-	private static String apkName = "test4";
+	private static String apkName = "test5";
 	private static String dirApk = directory + "/apk/" + apkName + ".apk";
 	/* */
 	private static String dirOutput = directory + "/output";
