@@ -21,8 +21,10 @@ import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.VoidType;
+import soot.JastAddJ.CastExpr;
 import soot.jimple.AssignStmt;
 import soot.jimple.ConditionExpr;
+import soot.jimple.Expr;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InterfaceInvokeExpr;
@@ -38,6 +40,9 @@ import soot.jimple.Stmt;
 import soot.jimple.SwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
+import soot.jimple.internal.AbstractBinopExpr;
+import soot.jimple.internal.JAddExpr;
+import soot.jimple.internal.JCastExpr;
 import soot.options.Options;
 import soot.util.Chain;
 import soot.util.HashChain;
@@ -84,7 +89,7 @@ public class apkGenerator {
 					} 
 					/* Identification */
 					else if(s instanceof IdentityStmt) {
-						v1 = ((AssignStmt) s).getLeftOp();
+						v1 = ((IdentityStmt) s).getLeftOp();
 						if(locals.contains(v1) && v1 instanceof Local) {
 							localsBlock.add((Local)v1);
 						}
@@ -158,97 +163,125 @@ public class apkGenerator {
 		        }
 		        
 		        /* Récupération des statements nécéssaire */
-		        
-		        
+		        List<Stmt> newStmtBody = new ArrayList<Stmt>();
+		        for(Local l : localsBlock) {
+		        	newStmtBody.addAll(getStmtByLocal(oldBody,localsBlock,l));
+		        }
 		        System.out.println(localsBlock);
 		        System.out.println(oldBody.getLocals());
+		        printNewBody(newStmtBody);
 			}
 		}));
 		PackManager.v().runPacks();
 		//PackManager.v().writeOutput();
 	}
 	
-	private static List<Stmt> getStmtByLocal(Body b, String local, Set<String> localBlock, List<Stmt> stmtBlock, List<String> localName) {
+	private static List<Stmt> getStmtByLocal(Body b, Set<Local >localsBlock, Local loc) {
 		List<Stmt> res = new ArrayList<Stmt>();
 		Chain<Local> cl = b.getLocals();
+		Value v1,v2;
 		for(Unit u : b.getUnits()) {
 			Stmt s = (Stmt) u;
-			if(!stmtBlock.contains(s)) {
-				String v1;
-				String value2;
-        		/* Assignement */
-				if(s instanceof AssignStmt) {
-					v1 = ((AssignStmt) s).getLeftOp().toString();
-					value2 = ((AssignStmt) s).getRightOp().toString();
-					if(local.equals(v1)) {
-						res.add(s);
-						if(localName.contains(value2) && !localBlock.contains(value2)) {
-							List<Stmt> tmp = new ArrayList<Stmt>(res);
-							res = getStmtByLocal(b, local, localBlock, stmtBlock, localName);
-							res.addAll(tmp);
+			/* Assignement */
+			if(s instanceof AssignStmt) {
+				v1 = ((AssignStmt) s).getLeftOp();
+				v2 = ((AssignStmt) s).getRightOp();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					System.out.println("---V2---");
+					System.out.println("v1 -> " + v2);
+					System.out.println("v2 -> "  + v2);
+					System.out.println("Type de v2 : " + v2.getClass());
+					if(v2 instanceof JCastExpr) {
+						Value imm = (Value) ((JCastExpr) v2).getOp();
+						if(imm instanceof Local && cl.contains(imm) && !imm.equals(v1)) {
+							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm));
+						}
+					} else if(v2 instanceof AbstractBinopExpr) {
+						Value imm1 = ((AbstractBinopExpr) v2).getOp1();
+						Value imm2 = ((AbstractBinopExpr) v2).getOp2();
+						System.out.println("imm : " + imm1 + " ; " + imm2);
+						System.out.println();
+						if(imm1 instanceof Local && cl.contains(imm1) && !imm1.equals(v1)) {
+							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm1));
+						}
+						if(imm2 instanceof Local && cl.contains(imm2) && !imm2.equals(v1)) {
+							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm2));
 						}
 					}
-					if(local.equals(value2)) {
-						res.add(s);
-					}
-				} 
-				/* Identification */
-				else if(s instanceof IdentityStmt) {
-					v1 = ((IdentityStmt) s).getLeftOp().toString();
-					if(local.equals(v1)) {
-						res.add(s);
-					}
-				} 
-				/* invoke */
-				else if(s instanceof InvokeStmt) {
-					InvokeStmt invoke = ((InvokeStmt) s);
-					InvokeExpr expr = invoke.getInvokeExpr();
-					if(expr instanceof SpecialInvokeExpr) {
-						String base = ((SpecialInvokeExpr) expr).getBase().toString();
-						if(local.equals(base)) {
-							res.add(s);
-						}
-					} else if(expr instanceof InterfaceInvokeExpr) {
-						String base = ((InterfaceInvokeExpr) expr).getBase().toString();
-						if(local.equals(base)) {
-							res.add(s);
-						}
-					} else if(expr instanceof VirtualInvokeExpr) {
-						String base = ((VirtualInvokeExpr) expr).getBase().toString();
-						if(local.equals(base)) {
-							res.add(s);
-						}
-					}
-					for(Value v : expr.getArgs()) {
-						if(local.equals(v.toString())) {
-							res.add(s);
-						}
-					}
+					res.add(s);
 				}
-				/* return */
-				else if(s instanceof ReturnStmt) {
-					v1 = ((ReturnStmt) s).getOp().toString();
-					if(local.equals(v1)) {
+			} 
+			/* Identification */
+			else if(s instanceof IdentityStmt) {
+				v1 = ((IdentityStmt) s).getLeftOp();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					res.add(s);
+				}
+			} 
+			/* if */
+			else if(s instanceof IfStmt) {
+				ConditionExpr cond = (ConditionExpr) ((IfStmt) s).getCondition();
+				v1 = cond.getOp1();
+				v2 = cond.getOp2();
+				if((v1.equals(loc) && v1 instanceof Local) || (v2.equals(loc) && v2 instanceof Local)) {
+					res.add(s);
+				}
+			} 
+			/* invoke */
+			else if(s instanceof InvokeStmt) {
+				InvokeStmt invoke = ((InvokeStmt) s);
+				InvokeExpr expr = invoke.getInvokeExpr();
+				if(expr instanceof SpecialInvokeExpr) {
+					v1 = ((SpecialInvokeExpr) expr).getBase();
+					if(v1.equals(loc) && v1 instanceof Local) {
 						res.add(s);
 					}
-				} 
-				/* Monitor */
-				else if(s instanceof MonitorStmt) {
-					v1 = ((MonitorStmt) s).getOp().toString();
-					if(local.equals(v1)) {
+				} else if(expr instanceof InterfaceInvokeExpr) {
+					v1 = ((InterfaceInvokeExpr) expr).getBase();
+					if(v1.equals(loc) && v1 instanceof Local) {
 						res.add(s);
 					}
-				} 
-				/* throw */
-				else if(s instanceof ThrowStmt) {
-					v1 = ((ThrowStmt) s).getOp().toString();
-					if(local.equals(v1)) {
+				} else if(expr instanceof VirtualInvokeExpr) {
+					v1 = ((VirtualInvokeExpr) expr).getBase();
+					if(v1.equals(loc) && v1 instanceof Local) {
 						res.add(s);
 					}
 				}
-        	}
-			
-		}
+				/*for(Value v : expr.getArgs()) {
+					if(locals.contains(v) && v instanceof Local) {
+						localsBlock.add((Local)v);
+					}
+				}*/
+			} 
+			/* switch */
+			else if(s instanceof SwitchStmt) {
+				v1 = ((SwitchStmt) s).getKey();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					res.add(s);
+				}
+			} 
+			/* return */
+			else if(s instanceof ReturnStmt) {
+				v1 = ((ReturnStmt) s).getOp();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					res.add(s);
+				}
+			} 
+			/* Monitor */
+			else if(s instanceof MonitorStmt) {
+				v1 = ((MonitorStmt) s).getOp();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					res.add(s);
+				}
+			} 
+			/* throw */
+			else if(s instanceof ThrowStmt) {
+				v1 = ((ThrowStmt) s).getOp();
+				if(v1.equals(loc) && v1 instanceof Local) {
+					res.add(s);
+				}
+			}
+        }
 		return res;
 	}
 	
