@@ -10,6 +10,8 @@ import soot.SootClass.*;
 import soot.options.Options;
 import soot.util.Chain;
 import soot.SootMethod;
+import soot.Unit;
+import soot.jimple.Stmt;
 import soot.Body;
 import soot.G;
 import soot.Scene;
@@ -62,5 +64,16 @@ public class utils {
 			}
 		}
 		printwrite.close();
+	}
+	
+	public static List<Stmt> orderList(Body b, List<Stmt> l) {
+		List<Stmt> res = new ArrayList<Stmt>();
+		for(Unit u : b.getUnits()) {
+			Stmt s = (Stmt) u;
+			if(l.contains(s)) {
+				res.add(s);
+			}
+		}
+		return res;
 	}
 }

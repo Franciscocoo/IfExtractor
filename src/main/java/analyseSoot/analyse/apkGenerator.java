@@ -1,5 +1,7 @@
 package analyseSoot.analyse;
 
+import analyseSoot.utils.*;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +21,9 @@ import soot.SootMethod;
 import soot.Transform;
 import soot.Type;
 import soot.Unit;
+import soot.UnitPatchingChain;
 import soot.Value;
+import soot.ValueBox;
 import soot.VoidType;
 import soot.JastAddJ.CastExpr;
 import soot.jimple.AssignStmt;
@@ -27,12 +31,15 @@ import soot.jimple.ConditionExpr;
 import soot.jimple.Expr;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.InstanceOfExpr;
 import soot.jimple.InterfaceInvokeExpr;
 import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
+import soot.jimple.LengthExpr;
 import soot.jimple.MonitorStmt;
+import soot.jimple.NegExpr;
 import soot.jimple.ReturnStmt;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
@@ -43,6 +50,7 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.AbstractBinopExpr;
 import soot.jimple.internal.JAddExpr;
 import soot.jimple.internal.JCastExpr;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 import soot.util.Chain;
 import soot.util.HashChain;
@@ -63,149 +71,158 @@ public class apkGenerator {
 		        cls.setApplicationClass();
 		        Scene.v().addClass(cls);
 		        
-		        /* Création de la méthode */
+		        /* 
+		         * Création de la méthode 
+		         */
 		        SootMethod n = new SootMethod("mainActivity", Arrays.asList(new Type[]{}),
 		                VoidType.v(), Modifier.PUBLIC | Modifier.STATIC);
 		        
-		        /* Récupération de la liste des Local */
+		        /* 
+		         * Organisation du if block 
+		         */
+		        List<Stmt> ifStmt = utils.orderList(oldBody, stmtBlock);
+		        
+		        /* 
+		         * Coupage du code après le if 
+		         */
+		        List<Stmt> blockToAnalyse = cutBottomBody(oldBody.getUnits(), ifStmt);
+		        
+		        /* 
+		         * Récupération de la liste des Local 
+		         */
 		        Chain<Local> locals = oldBody.getLocals();
 		        
 		        /* 
 		         * Identification des locals dans le block 
 		         */
-		        Set<Local> localsBlock = new HashSet<Local>();
-		        Value v1, v2;
-		        for(Stmt s : stmtBlock) {
-		        	/* Assignement */
-					if(s instanceof AssignStmt) {
-						v1 = ((AssignStmt) s).getLeftOp();
-						v2 = ((AssignStmt) s).getRightOp();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-						if(locals.contains(v2) && v2 instanceof Local) {
-							localsBlock.add((Local)v2);
-						}
-					} 
-					/* Identification */
-					else if(s instanceof IdentityStmt) {
-						v1 = ((IdentityStmt) s).getLeftOp();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-					} 
-					/* if */
-					else if(s instanceof IfStmt) {
-						ConditionExpr cond = (ConditionExpr) ((IfStmt) s).getCondition();
-						v1 = cond.getOp1();
-						v2 = cond.getOp2();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-						if(locals.contains(v2) && v2 instanceof Local) {
-							localsBlock.add((Local)v2);
-						}
-					} 
-					/* invoke */
-					else if(s instanceof InvokeStmt) {
-						InvokeStmt invoke = ((InvokeStmt) s);
-						InvokeExpr expr = invoke.getInvokeExpr();
-						if(expr instanceof SpecialInvokeExpr) {
-							v1 = ((SpecialInvokeExpr) expr).getBase();
-							if(locals.contains(v1) && v1 instanceof Local) {
-								localsBlock.add((Local)v1);
-							}
-						} else if(expr instanceof InterfaceInvokeExpr) {
-							v1 = ((InterfaceInvokeExpr) expr).getBase();
-							if(locals.contains(v1) && v1 instanceof Local) {
-								localsBlock.add((Local)v1);
-							}
-						} else if(expr instanceof VirtualInvokeExpr) {
-							v1 = ((VirtualInvokeExpr) expr).getBase();
-							if(locals.contains(v1) && v1 instanceof Local) {
-								localsBlock.add((Local)v1);
-							}
-						}
-						for(Value v : expr.getArgs()) {
-							if(locals.contains(v) && v instanceof Local) {
-								localsBlock.add((Local)v);
-							}
-						}
-					} 
-					/* switch */
-					else if(s instanceof SwitchStmt) {
-						v1 = ((SwitchStmt) s).getKey();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-					} 
-					/* return */
-					else if(s instanceof ReturnStmt) {
-						v1 = ((ReturnStmt) s).getOp();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-					} 
-					/* Monitor */
-					else if(s instanceof MonitorStmt) {
-						v1 = ((MonitorStmt) s).getOp();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-					} 
-					/* throw */
-					else if(s instanceof ThrowStmt) {
-						v1 = ((ThrowStmt) s).getOp();
-						if(locals.contains(v1) && v1 instanceof Local) {
-							localsBlock.add((Local)v1);
-						}
-					}
-		        }
+		        Set<Local> localsIf = getLocalIfBlock(ifStmt,locals);
 		        
 		        /* Récupération des statements nécéssaire */
 		        List<Stmt> newStmtBody = new ArrayList<Stmt>();
-		        for(Local l : localsBlock) {
-		        	newStmtBody.addAll(getStmtByLocal(oldBody,localsBlock,l));
+		        for(Local l : localsIf) {
+		        	newStmtBody.addAll(getStmtByLocal(oldBody,blockToAnalyse,l)); //CHANGE TO BLOCK
 		        }
-		        System.out.println(localsBlock);
-		        System.out.println(oldBody.getLocals());
-		        printNewBody(newStmtBody);
+		        newStmtBody.addAll(ifStmt);
+		        newStmtBody = utils.orderList(oldBody, newStmtBody);
+		        
+		        /* Initialisation de la liste des Classes */
+		        List<SootClass> listClass = new ArrayList<SootClass>();
+		        
+		        //Scene.v().removeClass(c);
+		        CallGraph appCallGraph = Scene.v().getCallGraph();
+		        System.out.println(appCallGraph);
 			}
 		}));
 		PackManager.v().runPacks();
 		//PackManager.v().writeOutput();
 	}
 	
-	private static List<Stmt> getStmtByLocal(Body b, Set<Local >localsBlock, Local loc) {
+	private static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
+		Set<Local> localsBlock = new HashSet<Local>();
+		 Value v1, v2;
+	        for(Stmt s : l) {
+	        	/* Assignement */
+				if(s instanceof AssignStmt) {
+					v1 = ((AssignStmt) s).getLeftOp();
+					v2 = ((AssignStmt) s).getRightOp();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+					if(locals.contains(v2) && v2 instanceof Local) {
+						localsBlock.add((Local)v2);
+					}
+				} 
+				/* Identification */
+				else if(s instanceof IdentityStmt) {
+					v1 = ((IdentityStmt) s).getLeftOp();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+				} 
+				/* if */
+				else if(s instanceof IfStmt) {
+					ConditionExpr cond = (ConditionExpr) ((IfStmt) s).getCondition();
+					v1 = cond.getOp1();
+					v2 = cond.getOp2();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+					if(locals.contains(v2) && v2 instanceof Local) {
+						localsBlock.add((Local)v2);
+					}
+				} 
+				/* invoke */
+				else if(s instanceof InvokeStmt) {
+					InvokeStmt invoke = ((InvokeStmt) s);
+					InvokeExpr expr = invoke.getInvokeExpr();
+					if(expr instanceof SpecialInvokeExpr) {
+						v1 = ((SpecialInvokeExpr) expr).getBase();
+						if(locals.contains(v1) && v1 instanceof Local) {
+							localsBlock.add((Local)v1);
+						}
+					} else if(expr instanceof InterfaceInvokeExpr) {
+						v1 = ((InterfaceInvokeExpr) expr).getBase();
+						if(locals.contains(v1) && v1 instanceof Local) {
+							localsBlock.add((Local)v1);
+						}
+					} else if(expr instanceof VirtualInvokeExpr) {
+						v1 = ((VirtualInvokeExpr) expr).getBase();
+						if(locals.contains(v1) && v1 instanceof Local) {
+							localsBlock.add((Local)v1);
+						}
+					}
+					for(Value v : expr.getArgs()) {
+						if(locals.contains(v) && v instanceof Local) {
+							localsBlock.add((Local)v);
+						}
+					}
+				} 
+				/* switch */
+				else if(s instanceof SwitchStmt) {
+					v1 = ((SwitchStmt) s).getKey();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+				} 
+				/* return */
+				else if(s instanceof ReturnStmt) {
+					v1 = ((ReturnStmt) s).getOp();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+				} 
+				/* Monitor */
+				else if(s instanceof MonitorStmt) {
+					v1 = ((MonitorStmt) s).getOp();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+				} 
+				/* throw */
+				else if(s instanceof ThrowStmt) {
+					v1 = ((ThrowStmt) s).getOp();
+					if(locals.contains(v1) && v1 instanceof Local) {
+						localsBlock.add((Local)v1);
+					}
+				}
+	        }
+		return localsBlock;
+	}
+	
+	private static List<Stmt> getStmtByLocal(Body b, List<Stmt> l, Local loc) {
 		List<Stmt> res = new ArrayList<Stmt>();
 		Chain<Local> cl = b.getLocals();
 		Value v1,v2;
-		for(Unit u : b.getUnits()) {
-			Stmt s = (Stmt) u;
+		for(Stmt s : l) {
 			/* Assignement */
 			if(s instanceof AssignStmt) {
 				v1 = ((AssignStmt) s).getLeftOp();
 				v2 = ((AssignStmt) s).getRightOp();
 				if(v1.equals(loc) && v1 instanceof Local) {
-					System.out.println("---V2---");
-					System.out.println("v1 -> " + v2);
-					System.out.println("v2 -> "  + v2);
-					System.out.println("Type de v2 : " + v2.getClass());
-					if(v2 instanceof JCastExpr) {
-						Value imm = (Value) ((JCastExpr) v2).getOp();
+					for(ValueBox v : v2.getUseBoxes()) {
+						Value imm = v.getValue();
 						if(imm instanceof Local && cl.contains(imm) && !imm.equals(v1)) {
-							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm));
-						}
-					} else if(v2 instanceof AbstractBinopExpr) {
-						Value imm1 = ((AbstractBinopExpr) v2).getOp1();
-						Value imm2 = ((AbstractBinopExpr) v2).getOp2();
-						System.out.println("imm : " + imm1 + " ; " + imm2);
-						System.out.println();
-						if(imm1 instanceof Local && cl.contains(imm1) && !imm1.equals(v1)) {
-							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm1));
-						}
-						if(imm2 instanceof Local && cl.contains(imm2) && !imm2.equals(v1)) {
-							res.addAll(0,getStmtByLocal(b,localsBlock,(Local)imm2));
+							res.addAll(0,getStmtByLocal(b,l,(Local)imm));
 						}
 					}
 					res.add(s);
@@ -290,6 +307,18 @@ public class apkGenerator {
 		for(Stmt st : l) {
 			System.out.println(st);
 		}
+	}
+	
+	private static List<Stmt> cutBottomBody(UnitPatchingChain upc, List<Stmt> l) {
+		List<Stmt> res = new ArrayList<Stmt>();
+		for(Unit u: upc) {
+			Stmt s = (Stmt) u;
+			if(l.contains(s)) {
+				return res;
+			}
+			res.add(s);
+		}
+		return res;
 	}
 	
 	

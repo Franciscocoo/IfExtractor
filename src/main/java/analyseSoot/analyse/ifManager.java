@@ -78,18 +78,12 @@ public class ifManager {
 		branchLeft = getBranch(dg, branchLeft, left);
 		List<Stmt> branchRight = new ArrayList<Stmt>();
 		branchRight = getBranch(dg, branchRight, right);
-		/*System.out.println("Branch left");
-		System.out.println(branchLeft);
-		System.out.println("Branch Right");
-		System.out.println(branchRight);*/
 		List<Stmt> union = new ArrayList<Stmt>(branchLeft);
 		union.addAll(branchRight);
 		List<Stmt> intersection = new ArrayList<Stmt>(branchLeft);
 		intersection.retainAll(branchRight);
 		List<Stmt> res = new ArrayList<Stmt>(union);
 		res.removeAll(intersection);
-		//System.out.println("IF");
-		//System.out.println(res);
 		return res;
 	}
 	
