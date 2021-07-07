@@ -29,6 +29,7 @@ public class ifManager {
 	protected static SootMethod methodToIsolate;
 	protected static Body bodyToIsolate;
 	protected static List<Stmt> codeToIsolate;
+	protected static SootClass classToIsolate;
 	
 	/*  */
 	private static String directory = System.getProperty("user.dir");
@@ -51,12 +52,14 @@ public class ifManager {
 									if(s instanceof IfStmt) {
 										methodToIsolate = m;
 										codeToIsolate = isolate(m, (IfStmt)s);
+										classToIsolate = c;
 										bodyToIsolate = b;
 										return;
 									}
 								}
 							}
 						}
+						System.out.println("***********");
 					}
 				}
 			}

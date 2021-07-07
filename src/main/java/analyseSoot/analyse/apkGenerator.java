@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import soot.Body;
 import soot.Local;
+import soot.MethodOrMethodContext;
 import soot.PackManager;
 import soot.Scene;
 import soot.SceneTransformer;
@@ -29,6 +31,7 @@ import soot.JastAddJ.CastExpr;
 import soot.jimple.AssignStmt;
 import soot.jimple.ConditionExpr;
 import soot.jimple.Expr;
+import soot.jimple.FieldRef;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InstanceOfExpr;
@@ -40,6 +43,7 @@ import soot.jimple.JimpleBody;
 import soot.jimple.LengthExpr;
 import soot.jimple.MonitorStmt;
 import soot.jimple.NegExpr;
+import soot.jimple.Ref;
 import soot.jimple.ReturnStmt;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
@@ -51,13 +55,15 @@ import soot.jimple.internal.AbstractBinopExpr;
 import soot.jimple.internal.JAddExpr;
 import soot.jimple.internal.JCastExpr;
 import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
+import soot.jimple.toolkits.callgraph.Targets;
 import soot.options.Options;
 import soot.util.Chain;
 import soot.util.HashChain;
 
 public class apkGenerator {
 	
-	public static void constructApk(final SootMethod m, final Body oldBody,final List<Stmt> stmtBlock, final String dirOutput) {
+	public static void constructApk(final SootMethod m, final Body oldBody,final List<Stmt> stmtBlock, final SootClass c, final String dirOutput) {
 		PackManager.v().getPack("wjtp").add(new Transform("wjtp.myTransform", new SceneTransformer() {
 			@Override
 			protected void internalTransform(String phaseName, Map<String, String> options) {
@@ -83,7 +89,7 @@ public class apkGenerator {
 		        List<Stmt> ifStmt = utils.orderList(oldBody, stmtBlock);
 		        
 		        /* 
-		         * Coupage du code après le if 
+		         * Coupage du code après le if (Partie Haute)
 		         */
 		        List<Stmt> blockToAnalyse = cutBottomBody(oldBody.getUnits(), ifStmt);
 		        
@@ -106,16 +112,32 @@ public class apkGenerator {
 		        newStmtBody = utils.orderList(oldBody, newStmtBody);
 		        
 		        /* Initialisation de la liste des Classes */
-		        List<SootClass> listClass = new ArrayList<SootClass>();
+		        List<SootClass> listClass = new ArrayList<SootClass>();		        
 		        
-		        //Scene.v().removeClass(c);
-		        CallGraph appCallGraph = Scene.v().getCallGraph();
-		        System.out.println(appCallGraph);
+		        /* Getting all ref from original class */
+		        List<FieldRef> localRefs = getLocalRefs(ifStmt, c);
+		        System.out.println(localRefs);
+		        
+		        /* Sources -> Source Methods of Edge (Father)
+		         * Units -> Source Statemnt of Edge
+		         * Targets -> Target Methods of edge (Son)
+		         * On veut Target de notre méthode contenant le IF
+		         */
+		        
+		        CallGraph cg = Scene.v().getCallGraph();
+		        System.out.println(m);
+		        Iterator<MethodOrMethodContext> ctargets = new Targets(cg.edgesOutOf(m));
+		        while (ctargets.hasNext()) {
+		             SootMethod child = (SootMethod) ctargets.next();
+		             System.out.println(m + " may call " + child);
+		        }
 			}
 		}));
 		PackManager.v().runPacks();
 		//PackManager.v().writeOutput();
 	}
+	
+	
 	
 	private static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
 		Set<Local> localsBlock = new HashSet<Local>();
@@ -321,5 +343,42 @@ public class apkGenerator {
 		return res;
 	}
 	
+	private static List<FieldRef> getLocalRefs(List<Stmt> l, SootClass c) {
+		List<FieldRef> res = new ArrayList<FieldRef>();
+		for(Stmt s : l) {
+			if(s instanceof AssignStmt) {
+				Value v1 = ((AssignStmt) s).getLeftOp();
+				Value v2 = ((AssignStmt) s).getRightOp();
+				System.out.println("Stmt : " + s);
+				System.out.println("v1 : " + v1.getClass());
+				System.out.println("v2 : " + v2.getClass());
+				if(v1 instanceof FieldRef) {
+					FieldRef rv1 = (FieldRef) v1;
+					if(rv1.getField().getDeclaringClass().equals(c)) {
+						res.add(rv1);
+					}
+				}
+				if(v2 instanceof FieldRef) {
+					FieldRef rv2 = (FieldRef) v2;
+					if(rv2.getField().getDeclaringClass().equals(c)) {
+						res.add(rv2);
+					}
+				}
+			}
+		}
+		return res;
+	}
+	
+	private static List<FieldRef> getExternalRefs(List<Stmt> l, SootClass c) {
+		List<FieldRef> res = new ArrayList<FieldRef>();
+		for(Stmt s : l) {
+			if(s instanceof InvokeStmt) {
+				InvokeStmt invstmt = ((InvokeStmt) s);
+				SootMethod m = invstmt.getInvokeExpr().getMethod();
+				m.getDeclaringClass();
+			}
+		}
+		return res;
+	}
 	
 }

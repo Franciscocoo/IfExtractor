@@ -9,6 +9,7 @@ import analyseSoot.utils.*;
 import soot.Body;
 import soot.PackManager;
 import soot.Scene;
+import soot.SootClass;
 import soot.SootMethod;
 import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
@@ -20,7 +21,7 @@ public class test {
 	private static String dirAndroid = home + "/Android/Sdk/platforms";
 	/* */
 	private static String directory = System.getProperty("user.dir");
-	private static String apkName = "test5";
+	private static String apkName = "dependencies1";
 	private static String dirApk = directory + "/apk/" + apkName + ".apk";
 	/* */
 	private static String dirOutput = directory + "/output";
@@ -41,6 +42,7 @@ public class test {
 		List<Stmt> l = ifManager.codeToIsolate;
 		SootMethod m = ifManager.methodToIsolate;
 		Body b = ifManager.bodyToIsolate;
+		SootClass c = ifManager.classToIsolate;
 		System.out.println("****************");
 		System.out.println(m);
 		System.out.println(l);
@@ -48,6 +50,6 @@ public class test {
 		
 		/* APK GENERATOR */
 		utils.initSoot(dirAndroid, dirApk);
-		apkGenerator.constructApk(m, b, l, dirOutput);
+		apkGenerator.constructApk(m, b, l, c, dirOutput);
 	}
 }
