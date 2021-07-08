@@ -1,4 +1,4 @@
-package analyseSoot.analyse;
+package ifIsolator;
 
 import analyseSoot.utils.*;
 
@@ -7,15 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import soot.Body;
-import soot.PackManager;
 import soot.Scene;
-import soot.SceneTransformer;
 import soot.SootClass;
 import soot.SootMethod;
-import soot.Transform;
 import soot.Unit;
 import soot.jimple.IfStmt;
-import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;
@@ -26,50 +22,34 @@ import soot.util.Chain;
 public class ifManager {
 
 	/*  */
-	protected static SootMethod methodToIsolate;
-	protected static Body bodyToIsolate;
-	protected static List<Stmt> codeToIsolate;
-	protected static SootClass classToIsolate;
-	
-	/*  */
 	private static String directory = System.getProperty("user.dir");
 	private static String dirOutput = directory + "/output";
 
-	
-	public static void getIf() {
-		PackManager.v().getPack("wjtp").add(new Transform("wjtp.myTransform", new SceneTransformer() {
-			@Override
-			protected void internalTransform(String phaseName, Map<String, String> options) {
-				Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
-				utils.saveJimple(appClasses, dirOutput);
-				for(SootClass c : appClasses) {
-					if(!(utils.isSystemClass(c.getName()))) {
-						for(SootMethod m : c.getMethods()) {
-							if(m.isConcrete()) {
-								Body b = m.retrieveActiveBody();
-								for(Unit u : b.getUnits()) {
-									Stmt s = (Stmt) u;
-									if(s instanceof IfStmt) {
-										methodToIsolate = m;
-										codeToIsolate = isolate(m, (IfStmt)s);
-										classToIsolate = c;
-										bodyToIsolate = b;
-										return;
-									}
-								}
+	public static IfPackage getIf() {
+		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
+		utils.saveJimple(appClasses, dirOutput);
+		for (SootClass c : appClasses) {
+			if (!(utils.isSystemClass(c.getName()))) {
+				for (SootMethod m : c.getMethods()) {
+					if (m.isConcrete()) {
+						Body b = m.retrieveActiveBody();
+						for (Unit u : b.getUnits()) {
+							Stmt s = (Stmt) u;
+							if (s instanceof IfStmt) {
+								IfPackage res = new IfPackage(m, b, isolate(m, (IfStmt) s), c);
+								return res;
 							}
 						}
-						System.out.println("***********");
 					}
 				}
 			}
-		}));
-		PackManager.v().runPacks();
+		}
+		return null;
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static List<Stmt> isolate(SootMethod m, IfStmt stmt) {
-		/* Getting Data and graph from Method m*/
+		/* Getting Data and graph from Method m */
 		Body b = m.retrieveActiveBody();
 		UnitGraph ug = new ExceptionalUnitGraph(b);
 		SimpleDominatorsFinder sdf = new SimpleDominatorsFinder(ug);
@@ -89,13 +69,13 @@ public class ifManager {
 		res.removeAll(intersection);
 		return res;
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static List<Stmt> getBranch(DirectedGraph dg, List<Stmt> l, Stmt s) {
 		l.add(s);
-		for(int i=0;i < dg.getSuccsOf(s).size();i++) {
+		for (int i = 0; i < dg.getSuccsOf(s).size(); i++) {
 			Stmt succ = (Stmt) dg.getSuccsOf(s).get(i);
-			if(!l.contains(succ)) {
+			if (!l.contains(succ)) {
 				getBranch(dg, l, succ);
 			}
 		}

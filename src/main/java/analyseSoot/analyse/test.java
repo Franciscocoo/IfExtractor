@@ -4,15 +4,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import analyseSoot.utils.*;
+import ifIsolator.IfPackage;
+import ifIsolator.ifManager;
 import soot.Body;
 import soot.PackManager;
 import soot.Scene;
+import soot.SceneTransformer;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Transform;
+import soot.Unit;
+import soot.jimple.IfStmt;
 import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
+import soot.util.Chain;
 
 public class test {
 
@@ -21,7 +29,7 @@ public class test {
 	private static String dirAndroid = home + "/Android/Sdk/platforms";
 	/* */
 	private static String directory = System.getProperty("user.dir");
-	private static String apkName = "dependencies1";
+	private static String apkName = "dependencies2";
 	private static String dirApk = directory + "/apk/" + apkName + ".apk";
 	/* */
 	private static String dirOutput = directory + "/output";
@@ -34,22 +42,30 @@ public class test {
 			Arrays.asList(files).forEach(File::delete);
 		}
 		
-		/* GET IF BLOCK */
 		utils.initSoot(dirAndroid, dirApk);
-		ifManager.getIf();
 		
-		/* Prints */
-		List<Stmt> l = ifManager.codeToIsolate;
-		SootMethod m = ifManager.methodToIsolate;
-		Body b = ifManager.bodyToIsolate;
-		SootClass c = ifManager.classToIsolate;
-		System.out.println("****************");
-		System.out.println(m);
-		System.out.println(l);
-		System.out.println("****************");
+		PackManager.v().getPack("wjtp").add(new Transform("wjtp.myTransform", new SceneTransformer() {
+			@Override
+			protected void internalTransform(String phaseName, Map<String, String> options) {
+				/* Get IF */
+				IfPackage p = ifManager.getIf();
+				
+				List<Stmt> l = p.getBlock();
+				SootMethod m = p.getMethod();
+				Body b = p.getBody();
+				SootClass c = p.getClasse();
+				
+				System.out.println("***********");
+				System.out.println("RESULTS : ");
+				System.out.println("Class : " + c);
+				System.out.println("Method : " + m);
+				System.out.println("Block IF : " + l);
+				System.out.println("***********");
+				
+				apkGenerator.constructApk(m, b, l, c, dirOutput);
+			}
+		}));
+		PackManager.v().runPacks();
 		
-		/* APK GENERATOR */
-		utils.initSoot(dirAndroid, dirApk);
-		apkGenerator.constructApk(m, b, l, c, dirOutput);
 	}
 }
