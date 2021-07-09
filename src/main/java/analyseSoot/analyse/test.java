@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import analyseSoot.ifIsolator.IfPackage;
+import analyseSoot.ifIsolator.ifManager;
 import analyseSoot.utils.*;
-import ifIsolator.IfPackage;
-import ifIsolator.ifManager;
 import soot.Body;
 import soot.PackManager;
 import soot.Scene;

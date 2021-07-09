@@ -1,4 +1,4 @@
-package ifIsolator;
+package analyseSoot.ifIsolator;
 
 import java.util.List;
 

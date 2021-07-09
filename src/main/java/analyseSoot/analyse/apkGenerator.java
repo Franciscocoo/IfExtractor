@@ -53,6 +53,7 @@ import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
+import soot.jimple.infoflow.android.InfoflowAndroidConfiguration.SootIntegrationMode;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.internal.AbstractBinopExpr;
 import soot.jimple.internal.JAddExpr;
@@ -75,20 +76,20 @@ public class apkGenerator {
 	public static void constructApk(final SootMethod m, final Body oldBody, final List<Stmt> stmtBlock,
 			final SootClass c, final String dirOutput) {
 		/* Setup de l'output apk */
-		Options.v().set_output_dir(dirOutput);
-		Options.v().set_output_format(Options.output_format_dex);
+		//Options.v().set_output_dir(dirOutput);
+		//Options.v().set_output_format(Options.output_format_dex);
 
 		/* Creation de la classe */
-		SootClass cls = new SootClass("Isolate", Modifier.PUBLIC);
-		cls.setSuperclass(Scene.v().getSootClass("java.lang.Object"));
-		cls.setApplicationClass();
-		Scene.v().addClass(cls);
+		//SootClass cls = new SootClass("Isolate", Modifier.PUBLIC);
+		//cls.setSuperclass(Scene.v().getSootClass("java.lang.Object"));
+		//cls.setApplicationClass();
+		//Scene.v().addClass(cls);
 
 		/*
 		 * Création de la méthode
 		 */
-		SootMethod n = new SootMethod("mainActivity", Arrays.asList(new Type[] {}), VoidType.v(),
-				Modifier.PUBLIC | Modifier.STATIC);
+		//SootMethod n = new SootMethod("mainActivity", Arrays.asList(new Type[] {}), VoidType.v(),
+				//Modifier.PUBLIC | Modifier.STATIC);
 
 		/*
 		 * Organisation du if block
@@ -133,9 +134,8 @@ public class apkGenerator {
 
 		final InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
 		config.getAnalysisFileConfig().setTargetAPKFile(dirApk);
-		config.getAnalysisFileConfig().setAndroidPlatformDir(dirAndroid);
-        config.setEnableReflection(true);
-		config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
+        config.getAnalysisFileConfig().setAndroidPlatformDir(dirAndroid);
+        config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
 		SetupApplication app = new SetupApplication(config);
 		app.constructCallgraph();
 		CallGraph cg = Scene.v().getCallGraph();
