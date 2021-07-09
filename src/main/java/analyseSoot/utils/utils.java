@@ -11,6 +11,7 @@ import soot.options.Options;
 import soot.util.Chain;
 import soot.SootMethod;
 import soot.Unit;
+import soot.UnitPatchingChain;
 import soot.jimple.Stmt;
 import soot.Body;
 import soot.G;
@@ -73,6 +74,25 @@ public class utils {
 			if(l.contains(s)) {
 				res.add(s);
 			}
+		}
+		return res;
+	}
+	
+	private static void printNewBody(List<Stmt> l) {
+		System.out.println("---PRINTING NEW BODY ---");
+		for (Stmt st : l) {
+			System.out.println(st);
+		}
+	}
+	
+	public static List<Stmt> cutBottomBody(UnitPatchingChain upc, List<Stmt> l) {
+		List<Stmt> res = new ArrayList<Stmt>();
+		for (Unit u : upc) {
+			Stmt s = (Stmt) u;
+			if (l.contains(s)) {
+				return res;
+			}
+			res.add(s);
 		}
 		return res;
 	}

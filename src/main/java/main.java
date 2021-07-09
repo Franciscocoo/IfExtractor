@@ -1,5 +1,3 @@
-
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +21,7 @@ import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
 import soot.util.Chain;
 
-public class test {
+public class main {
 
 	/* */
 	private static String home = System.getProperty("user.home");
