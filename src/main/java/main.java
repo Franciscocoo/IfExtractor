@@ -23,14 +23,14 @@ import soot.util.Chain;
 
 public class main {
 
-	/* */
+	/* Directory of Android Platforms*/
 	private static String home = System.getProperty("user.home");
 	private static String dirAndroid = home + "/Android/Sdk/platforms";
-	/* */
+	/* Directory of the apk put in output */
 	private static String directory = System.getProperty("user.dir");
 	private static String apkName = "dependencies2";
 	private static String dirApk = directory + "/apk/" + apkName + ".apk";
-	/* */
+	/* Directory of the output */
 	private static String dirOutput = directory + "/output";
 	
 	public static void main(String[] args) {
