@@ -1,6 +1,6 @@
-package analyseSoot.ifIsolator;
+package ifIsolator;
 
-import analyseSoot.utils.*;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +18,7 @@ import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.SimpleDominatorsFinder;
 import soot.toolkits.graph.UnitGraph;
 import soot.util.Chain;
+import utils.utils;
 
 public class ifManager {
 

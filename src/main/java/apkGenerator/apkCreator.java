@@ -1,4 +1,4 @@
-package analyseSoot.apkGenerator;
+package apkGenerator;
 
 import java.util.List;
 

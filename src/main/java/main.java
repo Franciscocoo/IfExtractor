@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import analyseSoot.analyse.apkGenerator;
-import analyseSoot.ifIsolator.IfPackage;
-import analyseSoot.ifIsolator.ifManager;
-import analyseSoot.utils.*;
+import utils.*;
+import ifIsolator.IfPackage;
+import ifIsolator.ifManager;
 import soot.Body;
 import soot.PackManager;
 import soot.Scene;
@@ -20,6 +20,7 @@ import soot.jimple.IfStmt;
 import soot.jimple.JimpleBody;
 import soot.jimple.Stmt;
 import soot.util.Chain;
+import utils.utils;
 
 public class main {
 

@@ -1,8 +1,8 @@
 package analyseSoot.analyse;
 
-import analyseSoot.apkGenerator.interDependencies;
-import analyseSoot.apkGenerator.intraDependencies;
-import analyseSoot.utils.*;
+import utils.*;
+import apkGenerator.interDependencies;
+import apkGenerator.intraDependencies;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -66,6 +66,7 @@ import soot.jimple.toolkits.callgraph.Targets;
 import soot.options.Options;
 import soot.util.Chain;
 import soot.util.HashChain;
+import utils.utils;
 
 public class apkGenerator {
 

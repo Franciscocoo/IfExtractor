@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <!--  Maven -->
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.FrancoisJullion.analyseSoot</groupId>
+  <groupId>com.github.FrancoisJullion.ifExtractor</groupId>
   <artifactId>analyseSoot</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>analyseSoot</name>
