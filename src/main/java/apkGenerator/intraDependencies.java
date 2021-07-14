@@ -7,6 +7,8 @@ import java.util.Set;
 
 import soot.Body;
 import soot.Local;
+import soot.SootClass;
+import soot.SootMethod;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.AssignStmt;
@@ -24,10 +26,28 @@ import soot.jimple.SwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
 import soot.util.Chain;
+import utils.utils;
 
 public class intraDependencies {
 
-	public static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
+	public static List<Stmt> getNewStmtBody(SootMethod m, Body oldBody, List<Stmt> ifStmt,
+			List<Stmt> blockToAnalyse, SootClass c) {
+		/* Récupération de la liste des Local */
+		Chain<Local> locals = oldBody.getLocals();
+		/* Identification des locals dans le block */
+		Set<Local> localsIf = getLocalIfBlock(ifStmt, locals);
+		/* Récupération des statements nécéssaire */
+		List<Stmt> newStmtBody = new ArrayList<Stmt>();
+		for (Local l : localsIf) {
+			newStmtBody.addAll(getStmtByLocal(oldBody, blockToAnalyse, l)); // CHANGE TO BLOCK
+		}
+		/* Adding the IF Block and order it */
+		newStmtBody.addAll(ifStmt);
+		newStmtBody = utils.orderList(oldBody, newStmtBody);
+		return newStmtBody;
+	}
+	
+	private static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
 		Set<Local> localsBlock = new HashSet<Local>();
 		Value v1, v2;
 		for (Stmt s : l) {
@@ -119,7 +139,7 @@ public class intraDependencies {
 		return localsBlock;
 	}
 	
-	public static List<Stmt> getStmtByLocal(Body b, List<Stmt> l, Local loc) {
+	private static List<Stmt> getStmtByLocal(Body b, List<Stmt> l, Local loc) {
 		List<Stmt> res = new ArrayList<Stmt>();
 		Chain<Local> cl = b.getLocals();
 		Value v1, v2;

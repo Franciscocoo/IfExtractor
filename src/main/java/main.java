@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import analyseSoot.analyse.apkGenerator;
+import apkGenerator.apkCreator;
 import utils.*;
 import ifIsolator.IfPackage;
 import ifIsolator.ifManager;
@@ -29,7 +29,7 @@ public class main {
 	private static String dirAndroid = home + "/Android/Sdk/platforms";
 	/* Directory of the apk put in output */
 	private static String directory = System.getProperty("user.dir");
-	private static String apkName = "dependencies2";
+	private static String apkName = "dependencies1";
 	private static String dirApk = directory + "/apk/" + apkName + ".apk";
 	/* Directory of the output */
 	private static String dirOutput = directory + "/output";
@@ -62,7 +62,8 @@ public class main {
 				System.out.println("Block IF : " + l);
 				System.out.println("***********");
 				
-				apkGenerator.constructApk(m, b, l, c, dirOutput);
+				apkCreator.constructApk(m, b, l, c, dirOutput, dirApk, dirAndroid);
+				
 			}
 		}));
 		PackManager.v().runPacks();
