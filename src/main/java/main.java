@@ -44,29 +44,23 @@ public class main {
 		
 		utils.initSoot(dirAndroid, dirApk);
 		
-		PackManager.v().getPack("wjtp").add(new Transform("wjtp.myTransform", new SceneTransformer() {
-			@Override
-			protected void internalTransform(String phaseName, Map<String, String> options) {
-				/* Get IF */
-				IfPackage p = ifManager.getIf();
-				
-				List<Stmt> l = p.getBlock();
-				SootMethod m = p.getMethod();
-				Body b = p.getBody();
-				SootClass c = p.getClasse();
-				
-				System.out.println("***********");
-				System.out.println("RESULTS : ");
-				System.out.println("Class : " + c);
-				System.out.println("Method : " + m);
-				System.out.println("Block IF : " + l);
-				System.out.println("***********");
-				
-				apkCreator.constructApk(m, b, l, c, dirOutput, dirApk, dirAndroid);
-				
-			}
-		}));
-		PackManager.v().runPacks();
+		//TestPrint.test();
 		
+		IfPackage p = ifManager.getIf();
+		
+		List<Stmt> l = p.getBlock();
+		SootMethod m = p.getMethod();
+		Body b = p.getBody();
+		SootClass c = p.getClasse();
+		
+		System.out.println("***********");
+		System.out.println("RESULTS : ");
+		System.out.println("Class : " + c);
+		System.out.println("Method : " + m);
+		System.out.println("Block IF : " + l);
+		System.out.println("***********");
+		
+		apkCreator.constructApk(m, b, l, c, dirOutput, dirApk, dirAndroid);
+				
 	}
 }

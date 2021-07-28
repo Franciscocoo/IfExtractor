@@ -13,6 +13,10 @@ import soot.SootMethod;
 import soot.Unit;
 import soot.UnitPatchingChain;
 import soot.jimple.Stmt;
+import soot.jimple.infoflow.InfoflowConfiguration;
+import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
+import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
+import soot.jimple.infoflow.android.SetupApplication;
 import soot.Body;
 import soot.G;
 import soot.Scene;
@@ -28,16 +32,14 @@ public class utils {
 	}
 	
 	public static void initSoot(String dirAndroid, String dirApk) {
-		G.v().reset();
-		Options.v().set_allow_phantom_refs(true);
-		Options.v().set_android_jars(dirAndroid);
-		List<String> l = new ArrayList<String>();
-		l.add(dirApk);
-		Options.v().set_process_dir(l);
-		Options.v().set_src_prec(Options.src_prec_apk);
-		Options.v().set_whole_program(true);
-		Scene.v().loadNecessaryClasses();
-		Scene.v().loadBasicClasses();
+		final InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
+		config.getAnalysisFileConfig().setAndroidPlatformDir(dirAndroid);
+		config.getAnalysisFileConfig().setTargetAPKFile(dirApk);
+        config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
+        config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
+        SetupApplication app = new SetupApplication(config);
+        app.constructCallgraph();
+        /* TODO : Nouvelle classe qui hérite de InfloFlowConfig avec la config soot souhaité pour eviter de passer par la callGraph */
 	}
 	
 	public static void saveJimple(Chain<SootClass> appClasses, String dirOutput) {

@@ -13,6 +13,7 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.AssignStmt;
 import soot.jimple.ConditionExpr;
+import soot.jimple.FieldRef;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InterfaceInvokeExpr;
@@ -28,8 +29,7 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.util.Chain;
 import utils.utils;
 
-public class intraDependencies {
-
+public class dependenciesSolver {
 	public static List<Stmt> getNewStmtBody(SootMethod m, Body oldBody, List<Stmt> ifStmt,
 			List<Stmt> blockToAnalyse, SootClass c) {
 		/* Récupération de la liste des Local */
@@ -47,7 +47,7 @@ public class intraDependencies {
 		return newStmtBody;
 	}
 	
-	private static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
+	public static Set<Local> getLocalIfBlock(List<Stmt> l, Chain<Local> locals) {
 		Set<Local> localsBlock = new HashSet<Local>();
 		Value v1, v2;
 		for (Stmt s : l) {
@@ -225,6 +225,25 @@ public class intraDependencies {
 				v1 = ((ThrowStmt) s).getOp();
 				if (v1.equals(loc) && v1 instanceof Local) {
 					res.add(s);
+				}
+			}
+		}
+		return res;
+	}
+	
+	public static List<FieldRef> getRefs(List<Stmt> l, SootClass c) {
+		List<FieldRef> res = new ArrayList<FieldRef>();
+		for (Stmt s : l) {
+			if (s instanceof AssignStmt) {
+				Value v1 = ((AssignStmt) s).getLeftOp();
+				Value v2 = ((AssignStmt) s).getRightOp();
+				if (v1 instanceof FieldRef) {
+					FieldRef rv1 = (FieldRef) v1;
+					res.add(rv1);
+				}
+				if (v2 instanceof FieldRef) {
+					FieldRef rv2 = (FieldRef) v2;
+					res.add(rv2);
 				}
 			}
 		}
