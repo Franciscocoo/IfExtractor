@@ -5,6 +5,7 @@ import java.util.List;
 
 import soot.Body;
 import soot.Local;
+import soot.SootMethodRef;
 import soot.Value;
 import soot.jimple.AddExpr;
 import soot.jimple.AndExpr;
@@ -195,7 +196,9 @@ public class stmtCreator {
 			return null;
 		}
 	}
-	/* TODO : Opti and clean */
+	
+	/* TODO : Opti and clean 
+	 * FAIRE LES 3 REFS POSSIBLE AVEC JIMPLE.V */
 	protected static IdentityStmt createIdentity(Stmt s, Body b) {
 		IdentityStmt st = (IdentityStmt) s;
 		// Gauche
@@ -331,8 +334,8 @@ public class stmtCreator {
 			}
 		}
 		return Jimple.v().newStaticInvokeExpr(e.getMethodRef(), args);
-
 	}
+	
 	 /* TODO : opti and clean */
 	protected static SwitchStmt createSwitchStmt(Stmt s, Body b) {
 		if(s instanceof TableSwitchStmt) {
@@ -397,17 +400,14 @@ public class stmtCreator {
 		}
 	}
 	
-	/* TODO : opti and clean */
 	protected static ThrowStmt createThrowStmt(Stmt s, Body b) {
 		ThrowStmt st = (ThrowStmt) s;
 		Value v = st.getOp();
 		if(v instanceof Local) {
 			Local local  = (Local) st.getOp();
-			Local newLocal = getLocal(local.getName(),b);
-			return Jimple.v().newThrowStmt(newLocal);
-		} else {
-			return Jimple.v().newThrowStmt(v);
+			v = getLocal(local.getName(),b);
 		}
+		return Jimple.v().newThrowStmt(v);
 	}
 	
 	protected static BreakpointStmt createBreakpointStmt() {

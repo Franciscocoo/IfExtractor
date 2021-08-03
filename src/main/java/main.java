@@ -45,6 +45,8 @@ public class main {
 		utils.initSoot(dirAndroid, dirApk);
 		
 		//TestPrint.test();
+		Chain<SootClass>appClasses = Scene.v().getApplicationClasses();
+		utils.saveJimple(appClasses, dirOutput);
 		
 		IfPackage p = ifManager.getIf();
 		

@@ -20,13 +20,12 @@ import utils.utils;
 
 public class ifManager {
 
-	/*  */
-	private static String directory = System.getProperty("user.dir");
-	private static String dirOutput = directory + "/output";
-
+	/**
+	 * 
+	 * @return 
+	 */
 	public static IfPackage getIf() {
 		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
-		utils.saveJimple(appClasses, dirOutput);
 		for (SootClass c : appClasses) {
 			if (!(utils.isSystemClass(c.getName()))) {
 				for (SootMethod m : c.getMethods()) {
@@ -45,7 +44,13 @@ public class ifManager {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * 
+	 * @param m
+	 * @param stmt
+	 * @return
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static List<Stmt> isolate(SootMethod m, IfStmt stmt) {
 		/* Getting Data and graph from Method m */
@@ -69,6 +74,13 @@ public class ifManager {
 		return res;
 	}
 
+	/**
+	 * 
+	 * @param dg
+	 * @param l
+	 * @param s
+	 * @return
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static List<Stmt> getBranch(DirectedGraph dg, List<Stmt> l, Stmt s) {
 		l.add(s);

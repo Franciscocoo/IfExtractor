@@ -27,8 +27,7 @@ public class utils {
 	public static boolean isSystemClass(String className) {
 		return (className.startsWith("android.") || className.startsWith("java.") || className.startsWith("javax.") || 
 				className.startsWith("sun.") || className.startsWith("org.omg.") || className.startsWith("org.w3c.dom.") ||
-				className.startsWith("com.google.") || className.startsWith("com.android.")) || className.startsWith("androidx") ||
-				className.startsWith("com.example.demo.R"); //Dernière à supprimer
+				className.startsWith("com.google.") || className.startsWith("com.android.")) || className.startsWith("androidx");
 	}
 	
 	public static void initSoot(String dirAndroid, String dirApk) {
@@ -39,7 +38,6 @@ public class utils {
         config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
         SetupApplication app = new SetupApplication(config);
         app.constructCallgraph();
-        /* TODO : Nouvelle classe qui hérite de InfloFlowConfig avec la config soot souhaité pour eviter de passer par la callGraph */
 	}
 	
 	public static void saveJimple(Chain<SootClass> appClasses, String dirOutput) {
