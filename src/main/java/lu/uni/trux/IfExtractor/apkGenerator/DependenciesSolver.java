@@ -1,10 +1,11 @@
-package apkGenerator;
+package lu.uni.trux.IfExtractor.apkGenerator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import lu.uni.trux.IfExtractor.utils.Utils;
 import soot.Body;
 import soot.Local;
 import soot.SootClass;
@@ -27,9 +28,8 @@ import soot.jimple.SwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
 import soot.util.Chain;
-import utils.utils;
 
-public class dependenciesSolver {
+public class DependenciesSolver {
 	public static List<Stmt> getNewStmtBody(SootMethod m, Body oldBody, List<Stmt> ifStmt,
 			List<Stmt> blockToAnalyse, SootClass c) {
 		/* Récupération de la liste des Local */
@@ -43,7 +43,7 @@ public class dependenciesSolver {
 		}
 		/* Adding the IF Block and order it */
 		newStmtBody.addAll(ifStmt);
-		newStmtBody = utils.orderList(oldBody, newStmtBody);
+		newStmtBody = Utils.orderList(oldBody, newStmtBody);
 		return newStmtBody;
 	}
 	

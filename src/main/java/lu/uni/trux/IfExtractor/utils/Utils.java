@@ -1,4 +1,4 @@
-package utils;
+package lu.uni.trux.IfExtractor.utils;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -22,7 +22,7 @@ import soot.G;
 import soot.Scene;
 import soot.SootClass;
 
-public class utils {
+public class Utils {
 	
 	public static boolean isSystemClass(String className) {
 		return (className.startsWith("android.") || className.startsWith("java.") || className.startsWith("javax.") || 
@@ -30,14 +30,16 @@ public class utils {
 				className.startsWith("com.google.") || className.startsWith("com.android.")) || className.startsWith("androidx");
 	}
 	
-	public static void initSoot(String dirAndroid, String dirApk) {
+	public static void initSoot(String dirAndroid, String dirApk, String dirOutput) {
 		final InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
 		config.getAnalysisFileConfig().setAndroidPlatformDir(dirAndroid);
 		config.getAnalysisFileConfig().setTargetAPKFile(dirApk);
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
-        config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
+        config.setCallgraphAlgorithm(CallgraphAlgorithm.SPARK);
         SetupApplication app = new SetupApplication(config);
         app.constructCallgraph();
+		Options.v().set_output_format(Options.output_format_dex);
+		Options.v().set_output_dir(dirOutput);
 	}
 	
 	public static void saveJimple(Chain<SootClass> appClasses, String dirOutput) {

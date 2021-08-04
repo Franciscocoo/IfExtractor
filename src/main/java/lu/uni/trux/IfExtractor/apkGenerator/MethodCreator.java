@@ -1,8 +1,10 @@
-package apkGenerator;
+package lu.uni.trux.IfExtractor.apkGenerator;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import soot.Local;
@@ -36,7 +38,7 @@ import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
 
-public class methodCreator {
+public class MethodCreator {
 	
 	public static void createInitMethod(SootClass ifClass) {
 		SootClass activity = Scene.v().loadClassAndSupport("android.app.Activity");
@@ -55,13 +57,13 @@ public class methodCreator {
 		units.add(Jimple.v().newInvokeStmt(specialExpr));
 		// return
 		units.add(Jimple.v().newReturnVoidStmt());
+		//System.out.println(initBody);
 		initBody.validate();
-		System.out.println(initBody);
 	}
 	
-	public static void createOnCreateMethod(SootClass ifClass) {
+	public static void createOnCreateMethod(SootClass ifClass, int n) {
 		SootClass activity = Scene.v().loadClassAndSupport("android.app.Activity");
-		SootMethod tmp = activity.getMethodByName("onCreate");
+		SootMethod tmp = activity.getMethod("void onCreate(android.os.Bundle)");
 		SootMethod onCreateMethod = new SootMethod(tmp.getName(), tmp.getParameterTypes(), tmp.getReturnType(), 0);
 		ifClass.addMethod(onCreateMethod);
 		JimpleBody onCreateBody = new JimpleBody(onCreateMethod);
@@ -70,28 +72,36 @@ public class methodCreator {
 		Local r0 = Jimple.v().newLocal("r0", ifClass.getType());
 		onCreateBody.getLocals().add(r0);
 		// android.os.bundle $r1
-		Local $r1 = Jimple.v().newLocal("$r1", Scene.v().getType("android.os.bundle"));
+		Local $r1 = Jimple.v().newLocal("$r1", tmp.getParameterType(0));
 		onCreateBody.getLocals().add($r1);
 		// r0 := @this: ifClass
 		units.add(Jimple.v().newIdentityStmt(r0, Jimple.v().newThisRef(ifClass.getType())));
 		// $r1 := @parameter0: android.os.Bundle
-		units.add(Jimple.v().newIdentityStmt($r1, Jimple.v().newParameterRef(Scene.v().getType("android.os.bundle"), 0)));
-		// invoke r0.ifMethod()
-		SootMethod ifMeth = Scene.v().getMethod("ifMethod");
-		VirtualInvokeExpr inv = Jimple.v().newVirtualInvokeExpr(r0, ifMeth.makeRef());
-		units.add(Jimple.v().newInvokeStmt(inv));
+		units.add(Jimple.v().newIdentityStmt($r1, Jimple.v().newParameterRef(tmp.getParameterType(0), 0)));
+		// invoke r0.ifMethod_n()
+		for(int i=1; i<=n; i++) {
+			String methodName = "ifMethod" + n;
+			SootMethod ifMeth = ifClass.getMethodByName(methodName);
+			StaticInvokeExpr expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef());
+			units.add(Jimple.v().newInvokeStmt(expr));
+		}
+		// return;
+		units.add(Jimple.v().newReturnVoidStmt());
+		//System.out.println(onCreateBody);
 		onCreateBody.validate();
 	}
 	
-	public static void createIfMethod(SootClass ifClass, Set<Local> localSet, List<Stmt> stmtList) {
+	public static void createIfMethod(SootClass ifClass, Set<Local> localSet, List<Stmt> stmtList, int n) {
 		List<Type> typeList = new ArrayList<Type>();
-		SootMethod ifMethod = new SootMethod("ifMethod", typeList, VoidType.v(), Modifier.PUBLIC);
+		String methodName = "ifMethod" + n;
+		SootMethod ifMethod = new SootMethod(methodName, typeList, VoidType.v(), Modifier.PUBLIC | Modifier.STATIC);
+		//SET STATIC QUELQUE PART SVP
 		ifClass.addMethod(ifMethod);
 		JimpleBody ifMethodBody = new JimpleBody(ifMethod);
 		addLocals(localSet, ifMethodBody);
-		addStmt(ifMethodBody, stmtList);
-		solveTargets(ifMethodBody, stmtList);
-		System.out.println(ifMethodBody);
+		Map<Stmt,Stmt> cloneMap = addStmt(ifMethodBody, stmtList);
+		solveTargets(ifMethodBody, cloneMap);
+		//System.out.println(ifMethodBody);
 		ifMethodBody.validate();
 	}
 	
@@ -102,106 +112,124 @@ public class methodCreator {
 		}
 	}
 	
-	private static void addStmt(JimpleBody b, List<Stmt> l) {
+	private static Map<Stmt,Stmt> addStmt(JimpleBody b, List<Stmt> l) {
 		UnitPatchingChain units = b.getUnits();
         List<Unit> generatedUnits = new ArrayList<>();
-        // List de Pair<Stmt,Stmt>
+        Map<Stmt,Stmt> cloneMap = new HashMap<Stmt,Stmt>();
 		for(Stmt s : l) {
 			//System.out.println(s);
 			/* Assignement */
 			if (s instanceof AssignStmt) {
-				generatedUnits.add(stmtCreator.createAssignStmt(s, b));
+				AssignStmt assign = StmtCreator.createAssignStmt(s, b);
+				cloneMap.put(s, assign);
+				generatedUnits.add(assign);
 			}
 			/* Identification */
 			else if (s instanceof IdentityStmt) {
-				generatedUnits.add(stmtCreator.createIdentity(s, b));
+				IdentityStmt identity = StmtCreator.createIdentity(s, b);
+				cloneMap.put(s, identity);
+				generatedUnits.add(identity);
 			}
 			/* Go to */
 			else if(s instanceof GotoStmt) {
-				generatedUnits.add(stmtCreator.createGoToStmt(s, b));
+				GotoStmt go = StmtCreator.createGoToStmt(s, b);
+				cloneMap.put(s, go);
+				generatedUnits.add(go);
 			}
 			/* if */
 			else if (s instanceof IfStmt) {
-				Stmt createIfStmt = stmtCreator.createIfStmt(s, b);
-				// createPair(s, createIfStmt)
-				// add new pair
-				generatedUnits.add(stmtCreator.createIfStmt(s, b));
+				IfStmt ifst = StmtCreator.createIfStmt(s, b);
+				cloneMap.put(s, ifst);
+				generatedUnits.add(ifst);
 			}
 			/* invoke */
 			else if (s instanceof InvokeStmt) {
-				generatedUnits.add(stmtCreator.createInvokeStmt(s, b));
+				InvokeStmt invoke = StmtCreator.createInvokeStmt(s, b); 
+				cloneMap.put(s, invoke);
+				generatedUnits.add(invoke);
 			}
 			/* switch */
 			else if (s instanceof SwitchStmt) {
-				generatedUnits.add(stmtCreator.createSwitchStmt(s, b));
+				SwitchStmt switchSt = StmtCreator.createSwitchStmt(s, b);
+				cloneMap.put(s, switchSt);
+				generatedUnits.add(switchSt);
 			}
 			/* Monitor */
 			else if (s instanceof MonitorStmt) {
-				generatedUnits.add(stmtCreator.createMonitorStmt(s, b));
+				MonitorStmt monitor = StmtCreator.createMonitorStmt(s, b);
+				cloneMap.put(s, monitor);
+				generatedUnits.add(monitor);
 			}
 			/* return */
 			else if (s instanceof ReturnStmt) {
-				generatedUnits.add(stmtCreator.createReturnStmt(s, b));
+				ReturnStmt ret = StmtCreator.createReturnStmt(s, b);
+				cloneMap.put(s, ret);
+				generatedUnits.add(ret);
 			}
 			/* throw */
 			else if (s instanceof ThrowStmt) {
-				generatedUnits.add(stmtCreator.createThrowStmt(s, b));
+				ThrowStmt throwSt = StmtCreator.createThrowStmt(s, b);
+				cloneMap.put(s, throwSt);
+				generatedUnits.add(throwSt);
 			}
 			/* Breakpoint */
 			else if(s instanceof BreakpointStmt) {
+				cloneMap.put(s, Jimple.v().newBreakpointStmt());
 				generatedUnits.add(Jimple.v().newBreakpointStmt());
 			}
 			/* Nop */
 			else if(s instanceof NopStmt) {
-				generatedUnits.add(stmtCreator.createNopStmt());
+				cloneMap.put(s, Jimple.v().newNopStmt());
+				generatedUnits.add(StmtCreator.createNopStmt());
 			}
 		}
-		solveTargets(b, l);
 		units.addAll(generatedUnits);
+		return cloneMap;
 	}
 	
-	/* LISTE DE TUPLE POUR GERER */
-	private static void solveTargets(JimpleBody b, List<Stmt> block) {
+	/* MAP<STMT,STMT> POUR GERER */
+	private static void solveTargets(JimpleBody b, Map<Stmt,Stmt> cloneMap) {
+		ReturnVoidStmt retNull = Jimple.v().newReturnVoidStmt();
+		b.getUnits().add(retNull);
 		for(Unit u : b.getUnits()) {
 			Stmt s = (Stmt) u;
 			if(s instanceof IfStmt) {
 				IfStmt st = (IfStmt) s;
-				Unit target = st.getTarget();
-				for(Unit us : b.getUnits()) {
-					if(target.toString().equals(us.toString())) {
-						((IfStmt) s).setTarget(us);
-					}
+				Stmt target = st.getTarget();
+				if(cloneMap.containsKey(target)) {
+					st.setTarget(cloneMap.get(target));
+				} else {
+					st.setTarget(retNull);
 				}
 			} else if(s instanceof TableSwitchStmt) {
 				TableSwitchStmt st = (TableSwitchStmt) s;
+				int n = st.getLowIndex();
 				for(Unit target : st.getTargets()) {
-					for(Unit us : b.getUnits()) {
-						if(target.toString().equals(us.toString())) {
-							((TableSwitchStmt) s).setDefaultTarget(us);
-						}
+					if(cloneMap.containsValue(target)) {
+						st.setTarget(n, target);
+					} else {
+						st.setTarget(n, retNull);
 					}
+					n++;
 				}
 			} else if(s instanceof LookupSwitchStmt) {
-				LookupSwitchStmt st = (LookupSwitchStmt) s;
+				/*LookupSwitchStmt st = (LookupSwitchStmt) s;
 				for(Unit target : st.getTargets()) {
 					for(Unit us : b.getUnits()) {
 						if(target.toString().equals(us.toString())) {
 							((LookupSwitchStmt) s).setDefaultTarget(target);
 						}
 					}
-				}
+				}*/
 			} else if(s instanceof GotoStmt) {
 				GotoStmt st = (GotoStmt) s;
 				Unit target = st.getTarget();
-				for(Unit us : b.getUnits()) {
-					if(target.toString().equals(us.toString())) {
-						((GotoStmt) s).setTarget(us);
-					}
+				if(cloneMap.containsKey(target)) {
+					st.setTarget(cloneMap.get(target));
+				} else {
+					st.setTarget(retNull);
 				}	
 			}
 		}
-		/* ReturnVoidStmt nullReturn = Jimple.v().newReturnVoidStmt(); 
-				b.getUnits().add(nullReturn);
-				st.setTarget(nullReturn); */
 	}
 }

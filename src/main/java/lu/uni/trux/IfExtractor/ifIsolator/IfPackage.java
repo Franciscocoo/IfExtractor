@@ -1,4 +1,4 @@
-package ifIsolator;
+package lu.uni.trux.IfExtractor.ifIsolator;
 
 import java.util.List;
 

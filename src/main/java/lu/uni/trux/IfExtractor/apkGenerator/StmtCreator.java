@@ -1,10 +1,11 @@
-package apkGenerator;
+package lu.uni.trux.IfExtractor.apkGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import soot.Body;
 import soot.Local;
+import soot.RefType;
 import soot.SootMethodRef;
 import soot.Value;
 import soot.jimple.AddExpr;
@@ -54,12 +55,13 @@ import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
+import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
 import soot.jimple.UshrExpr;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.XorExpr;
 
-public class stmtCreator {
+public class StmtCreator {
 	
 	protected static AssignStmt createAssignStmt(Stmt s, Body b) {
 		AssignStmt st = (AssignStmt) s;
@@ -142,6 +144,12 @@ public class stmtCreator {
 		return Jimple.v().newAssignStmt(v1, v2);
 	}
 
+	/**
+	 * 
+	 * @param e
+	 * @param b
+	 * @return
+	 */
 	private static BinopExpr createBinopExpr(BinopExpr e, Body b) {
 		Value left = e.getOp1();
 		Value right = e.getOp2();
@@ -210,9 +218,14 @@ public class stmtCreator {
 			ParameterRef param = (ParameterRef) rightOp;
 			ParameterRef newParam = new ParameterRef(param.getType(), param.getIndex());
 			return Jimple.v().newIdentityStmt(leftLocal, newParam);
-		} else {
+		} else if(rightOp instanceof ThisRef){
+			ThisRef ref = (ThisRef) rightOp;
+			ThisRef newRef = Jimple.v().newThisRef((RefType) ref.getType());
+			return Jimple.v().newIdentityStmt(leftLocal, newRef);
+		} else if(rightOp instanceof Exception) {
 			return Jimple.v().newIdentityStmt(leftLocal, rightOp);
 		}
+		return null;
 	}
 	
 	protected static GotoStmt createGoToStmt(Stmt s, Body b) {

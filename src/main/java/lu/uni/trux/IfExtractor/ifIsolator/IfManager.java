@@ -1,8 +1,9 @@
-package ifIsolator;
+package lu.uni.trux.IfExtractor.ifIsolator;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import lu.uni.trux.IfExtractor.utils.Utils;
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;
@@ -16,18 +17,17 @@ import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.SimpleDominatorsFinder;
 import soot.toolkits.graph.UnitGraph;
 import soot.util.Chain;
-import utils.utils;
 
-public class ifManager {
+public class IfManager {
 
 	/**
 	 * 
 	 * @return 
 	 */
-	public static IfPackage getIf() {
+	public static IfPackage getIf(IfStmt is) {
 		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
 		for (SootClass c : appClasses) {
-			if (!(utils.isSystemClass(c.getName()))) {
+			if (!(Utils.isSystemClass(c.getName()))) {
 				for (SootMethod m : c.getMethods()) {
 					if (m.isConcrete()) {
 						Body b = m.retrieveActiveBody();
