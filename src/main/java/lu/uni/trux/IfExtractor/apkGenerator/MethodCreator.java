@@ -57,7 +57,7 @@ public class MethodCreator {
 		units.add(Jimple.v().newInvokeStmt(specialExpr));
 		// return
 		units.add(Jimple.v().newReturnVoidStmt());
-		//System.out.println(initBody);
+		System.out.println(initBody);
 		initBody.validate();
 	}
 	
@@ -80,14 +80,14 @@ public class MethodCreator {
 		units.add(Jimple.v().newIdentityStmt($r1, Jimple.v().newParameterRef(tmp.getParameterType(0), 0)));
 		// invoke r0.ifMethod_n()
 		for(int i=1; i<=n; i++) {
-			String methodName = "ifMethod" + n;
+			String methodName = "ifMethod" + i;
 			SootMethod ifMeth = ifClass.getMethodByName(methodName);
 			StaticInvokeExpr expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef());
 			units.add(Jimple.v().newInvokeStmt(expr));
 		}
 		// return;
 		units.add(Jimple.v().newReturnVoidStmt());
-		//System.out.println(onCreateBody);
+		System.out.println(onCreateBody);
 		onCreateBody.validate();
 	}
 	
@@ -101,7 +101,7 @@ public class MethodCreator {
 		addLocals(localSet, ifMethodBody);
 		Map<Stmt,Stmt> cloneMap = addStmt(ifMethodBody, stmtList);
 		solveTargets(ifMethodBody, cloneMap);
-		//System.out.println(ifMethodBody);
+		System.out.println(ifMethodBody);
 		ifMethodBody.validate();
 	}
 	
@@ -162,7 +162,7 @@ public class MethodCreator {
 			}
 			/* return */
 			else if (s instanceof ReturnStmt) {
-				ReturnStmt ret = StmtCreator.createReturnStmt(s, b);
+				ReturnVoidStmt ret = Jimple.v().newReturnVoidStmt();
 				cloneMap.put(s, ret);
 				generatedUnits.add(ret);
 			}

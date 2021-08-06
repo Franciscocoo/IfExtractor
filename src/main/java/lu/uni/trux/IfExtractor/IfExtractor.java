@@ -110,15 +110,24 @@ public class IfExtractor {
 		modifyManifest();
 		
 		/* Write the apk */
-		PackManager.v().writeOutput();
+		//PackManager.v().writeOutput();
 	}
 	
 	private void modifyManifest() throws IOException, XmlPullParserException {
 		ProcessManifest androidManifest = new ProcessManifest(this.dirApk);
 		System.out.println("***********************");
-		System.out.println(androidManifest.getApplicationName());
-		System.out.println(androidManifest.getActivities());
-		AXmlNode man = androidManifest.getManifest();
+		for(AXmlNode act : androidManifest.getActivities()) {
+			//Parcourir les attributes
+			
+			//Chercher le intentfilter MAIN
+			//L'enlever
+			//Rajouter une activité et mettre l'intentfilterMAIN
+			System.out.println(act.getTag());
+			System.out.println(act.getNamespace());
+			System.out.println(act.getParent());
+			System.out.println(act.getAttributes());
+		}
+		//androidManifest.addActivity(node);
 		System.out.println("***********************");
 	}
 

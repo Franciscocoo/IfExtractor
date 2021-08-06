@@ -35,7 +35,7 @@ public class Utils {
 		config.getAnalysisFileConfig().setAndroidPlatformDir(dirAndroid);
 		config.getAnalysisFileConfig().setTargetAPKFile(dirApk);
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
-        config.setCallgraphAlgorithm(CallgraphAlgorithm.SPARK);
+        config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
         SetupApplication app = new SetupApplication(config);
         app.constructCallgraph();
 		Options.v().set_output_format(Options.output_format_dex);

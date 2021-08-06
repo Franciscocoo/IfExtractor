@@ -14,6 +14,7 @@ import soot.jimple.AssignStmt;
 import soot.jimple.BinopExpr;
 import soot.jimple.BreakpointStmt;
 import soot.jimple.CastExpr;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.CmpExpr;
 import soot.jimple.CmpgExpr;
 import soot.jimple.CmplExpr;
@@ -53,6 +54,7 @@ import soot.jimple.ShrExpr;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
+import soot.jimple.SubExpr;
 import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThisRef;
@@ -151,6 +153,7 @@ public class StmtCreator {
 	 * @return
 	 */
 	private static BinopExpr createBinopExpr(BinopExpr e, Body b) {
+		BinopExpr newBinopExpr;
 		Value left = e.getOp1();
 		Value right = e.getOp2();
 		if(left instanceof Local) {
@@ -162,70 +165,68 @@ public class StmtCreator {
 			right = getLocal(loc.getName(),b);
 		}
 		if(e instanceof AddExpr) {
-			return Jimple.v().newAddExpr(left, right);
+			newBinopExpr = Jimple.v().newAddExpr(left, right);
 		} else if(e instanceof AndExpr) {
-			return Jimple.v().newAndExpr(left, right);
+			newBinopExpr = Jimple.v().newAndExpr(left, right);
 		} else if(e instanceof CmpExpr) {
-			return Jimple.v().newCmpExpr(left, right);
+			newBinopExpr = Jimple.v().newCmpExpr(left, right);
 		} else if(e instanceof CmplExpr) {
-			return Jimple.v().newCmplExpr(left, right);
+			newBinopExpr = Jimple.v().newCmplExpr(left, right);
 		} else if(e instanceof CmpgExpr) {
-			return Jimple.v().newCmpgExpr(left, right);
+			newBinopExpr = Jimple.v().newCmpgExpr(left, right);
 		} else if(e instanceof DivExpr) {
-			return Jimple.v().newDivExpr(left, right);
+			newBinopExpr = Jimple.v().newDivExpr(left, right);
 		} else if(e instanceof EqExpr) {
-			return Jimple.v().newEqExpr(left, right);
+			newBinopExpr = Jimple.v().newEqExpr(left, right);
 		} else if(e instanceof GeExpr) {
-			return Jimple.v().newGeExpr(left, right);
+			newBinopExpr = Jimple.v().newGeExpr(left, right);
 		} else if(e instanceof GtExpr) {
-			return Jimple.v().newGtExpr(left, right);
+			newBinopExpr = Jimple.v().newGtExpr(left, right);
 		} else if(e instanceof LeExpr) {
-			return Jimple.v().newLeExpr(left, right);
+			newBinopExpr = Jimple.v().newLeExpr(left, right);
 		} else if(e instanceof LtExpr) {
-			return Jimple.v().newLtExpr(left, right);
+			newBinopExpr = Jimple.v().newLtExpr(left, right);
 		} else if(e instanceof MulExpr) {
-			return Jimple.v().newMulExpr(left, right);
+			newBinopExpr = Jimple.v().newMulExpr(left, right);
 		} else if(e instanceof NeExpr) {
-			return Jimple.v().newNeExpr(left, right);
+			newBinopExpr = Jimple.v().newNeExpr(left, right);
 		} else if(e instanceof OrExpr) {
-			return Jimple.v().newOrExpr(left, right);
+			newBinopExpr = Jimple.v().newOrExpr(left, right);
 		} else if(e instanceof RemExpr) {
-			return Jimple.v().newRemExpr(left, right);
+			newBinopExpr = Jimple.v().newRemExpr(left, right);
 		} else if(e instanceof ShlExpr) {
-			return Jimple.v().newShlExpr(left, right);
+			newBinopExpr = Jimple.v().newShlExpr(left, right);
 		} else if(e instanceof ShrExpr) {
-			return Jimple.v().newShrExpr(left, right);
+			newBinopExpr = Jimple.v().newShrExpr(left, right);
+		} else if(e instanceof SubExpr) {
+			newBinopExpr = Jimple.v().newSubExpr(left, right);
 		} else if(e instanceof UshrExpr) {
-			return Jimple.v().newUshrExpr(left, right);
-		} else if(e instanceof XorExpr) {
-			return Jimple.v().newXorExpr(left, right);
+			newBinopExpr = Jimple.v().newUshrExpr(left, right);
 		} else {
-			/* IMPOSSIBLE */
-			return null;
+			newBinopExpr = Jimple.v().newXorExpr(left, right);
 		}
+		return newBinopExpr;
 	}
 	
-	/* TODO : Opti and clean 
-	 * FAIRE LES 3 REFS POSSIBLE AVEC JIMPLE.V */
 	protected static IdentityStmt createIdentity(Stmt s, Body b) {
+		IdentityStmt newIdentityStmt;
 		IdentityStmt st = (IdentityStmt) s;
-		// Gauche
 		Local leftOp  = (Local) st.getLeftOp();
 		Local leftLocal = getLocal(leftOp.getName(),b);
-		// Droite
 		Value rightOp = (Value) st.getRightOp().clone();
 		if(rightOp instanceof ParameterRef) {
 			ParameterRef param = (ParameterRef) rightOp;
 			ParameterRef newParam = new ParameterRef(param.getType(), param.getIndex());
-			return Jimple.v().newIdentityStmt(leftLocal, newParam);
+			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, newParam);
 		} else if(rightOp instanceof ThisRef){
 			ThisRef ref = (ThisRef) rightOp;
 			ThisRef newRef = Jimple.v().newThisRef((RefType) ref.getType());
-			return Jimple.v().newIdentityStmt(leftLocal, newRef);
-		} else if(rightOp instanceof Exception) {
-			return Jimple.v().newIdentityStmt(leftLocal, rightOp);
+			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, newRef);
+		} else {
+			CaughtExceptionRef exceptRef = Jimple.v().newCaughtExceptionRef();
+			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, exceptRef);
 		}
-		return null;
+		return newIdentityStmt;
 	}
 	
 	protected static GotoStmt createGoToStmt(Stmt s, Body b) {
@@ -262,26 +263,24 @@ public class StmtCreator {
 		return Jimple.v().newIfStmt(cond, st.getTarget());
 	}
 	
-	/* TODO : Opti and Clean */
 	protected static InvokeStmt createInvokeStmt(Stmt s, Body b) {
+		InvokeStmt newInvokeStmt;
 		InvokeStmt st = (InvokeStmt) s;
 		InvokeExpr expr = st.getInvokeExpr();
 		if(expr instanceof SpecialInvokeExpr) {
 			SpecialInvokeExpr specialExpr = createSpecialInvokeExpr(expr, b);
-			return Jimple.v().newInvokeStmt(specialExpr);
+			newInvokeStmt = Jimple.v().newInvokeStmt(specialExpr);
 		} else if(expr instanceof InterfaceInvokeExpr) {
 			InterfaceInvokeExpr interfaceExpr = createInterfaceInvokeExpr(expr, b);
-			return Jimple.v().newInvokeStmt(interfaceExpr);
+			newInvokeStmt = Jimple.v().newInvokeStmt(interfaceExpr);
 		} else if(expr instanceof VirtualInvokeExpr) {
 			VirtualInvokeExpr virtualExpr = createVirtualInvokeExpr(expr, b);
-			return Jimple.v().newInvokeStmt(virtualExpr);
-		} else if(expr instanceof StaticInvokeExpr) {
-			StaticInvokeExpr staticExpr = createStaticInvokeExpr(expr, b);
-			return Jimple.v().newInvokeStmt(staticExpr);
+			newInvokeStmt = Jimple.v().newInvokeStmt(virtualExpr);
 		} else {
-			/* IMPOSSIBLE */
-			return null;
+			StaticInvokeExpr staticExpr = createStaticInvokeExpr(expr, b);
+			newInvokeStmt = Jimple.v().newInvokeStmt(staticExpr);
 		}
+		return newInvokeStmt;
 	}
 	
 	private static SpecialInvokeExpr createSpecialInvokeExpr(InvokeExpr e, Body b) {
@@ -349,68 +348,47 @@ public class StmtCreator {
 		return Jimple.v().newStaticInvokeExpr(e.getMethodRef(), args);
 	}
 	
-	 /* TODO : opti and clean */
 	protected static SwitchStmt createSwitchStmt(Stmt s, Body b) {
+		SwitchStmt newSwitchStmt;
+		SwitchStmt st = (SwitchStmt) s;
+		Value v = st.getKey();
 		if(s instanceof TableSwitchStmt) {
-			TableSwitchStmt st = (TableSwitchStmt) s;
-			Value v = st.getKey();
+			TableSwitchStmt tableStmt = (TableSwitchStmt) s;
 			if(v instanceof Local) {
 				Local loc = (Local) v;
 				v = getLocal(loc.getName(),b);
 			}
-			return Jimple.v().newTableSwitchStmt(v, st.getLowIndex(), st.getHighIndex(), st.getTargets(), st.getDefaultTarget());
-		} else if(s instanceof LookupSwitchStmt) {
-			LookupSwitchStmt st = (LookupSwitchStmt) s;
-			Value v = st.getKey();
-			if(v instanceof Local) {
-				Local loc = (Local) v;
-				v = getLocal(loc.getName(),b);
-			}
-			return Jimple.v().newLookupSwitchStmt(v, st.getLookupValues(), st.getTargets(), st.getDefaultTarget());
+			newSwitchStmt = Jimple.v().newTableSwitchStmt(v, tableStmt.getLowIndex(), tableStmt.getHighIndex(), tableStmt.getTargets(), tableStmt.getDefaultTarget());
 		} else {
-			/* IMPOSSIBLE */
-			return null;
+			LookupSwitchStmt lookUpStmt = (LookupSwitchStmt) s;
+			if(v instanceof Local) {
+				Local loc = (Local) v;
+				v = getLocal(loc.getName(),b);
+			}
+			newSwitchStmt = Jimple.v().newLookupSwitchStmt(v, lookUpStmt.getLookupValues(), lookUpStmt.getTargets(), lookUpStmt.getDefaultTarget());
 		}
+		return newSwitchStmt;
 	}
 	
-	/* TODO : opti and clean */
+
 	protected static MonitorStmt createMonitorStmt(Stmt s, Body b) {
+		MonitorStmt newMonitorStmt;
 		MonitorStmt st = (MonitorStmt) s;
-		if(s instanceof EnterMonitorStmt) {
-			Value v = st.getOp();
-			if(v instanceof Local) {
-				Local local  = (Local) st.getOp();
-				Local newLocal = getLocal(local.getName(),b);
-				return Jimple.v().newEnterMonitorStmt(newLocal);
-			} else {
-				return Jimple.v().newEnterMonitorStmt(v);
-			}
-		} else if(s instanceof ExitMonitorStmt) {
-			Value v = st.getOp();
-			if(v instanceof Local) {
-				Local local  = (Local) st.getOp();
-				Local newLocal = getLocal(local.getName(),b);
-				return Jimple.v().newExitMonitorStmt(newLocal);
-			} else {
-				return Jimple.v().newExitMonitorStmt(v);
-			}
-		} else {
-			/* IMPOSSIBLE */
-			return null;
-		}
-	}
-	
-	/* TODO : opti and clean */
-	protected static ReturnStmt createReturnStmt(Stmt s, Body b) {
-		ReturnStmt st = (ReturnStmt) s;
 		Value v = st.getOp();
-		if(v instanceof Local) {
-			Local local  = (Local) st.getOp();
-			Local newLocal = getLocal(local.getName(),b);
-			return Jimple.v().newReturnStmt(newLocal);
+		if(s instanceof EnterMonitorStmt) {
+			if(v instanceof Local) {
+				Local local  = (Local) st.getOp();
+				v = getLocal(local.getName(),b);
+			}
+			newMonitorStmt = Jimple.v().newEnterMonitorStmt(v);
 		} else {
-			return Jimple.v().newReturnStmt(v);
+			if(v instanceof Local) {
+				Local local  = (Local) st.getOp();
+				v = getLocal(local.getName(),b);
+			}
+			newMonitorStmt = Jimple.v().newExitMonitorStmt(v);
 		}
+		return newMonitorStmt;
 	}
 	
 	protected static ThrowStmt createThrowStmt(Stmt s, Body b) {

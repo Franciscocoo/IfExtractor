@@ -38,7 +38,7 @@ public class Main {
 		String dirAndroid = "/home/student/Android-platforms/jars/stubs";
 		
 		String directory = System.getProperty("user.dir");
-		String apkName = "ToyApp1";
+		String apkName = "dependencies7";
 		String dirApk = directory + "/apk/" + apkName + ".apk";
 		
 		String dirOutput = directory + "/output";
@@ -51,7 +51,7 @@ public class Main {
 		
 		IfExtractor test = new IfExtractor(dirAndroid, dirApk, dirOutput);
 		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
-		Utils.saveJimple(appClasses, dirOutput);
+		//Utils.saveJimple(appClasses, dirOutput);
 		for (SootClass c : appClasses) {
 			if (!(Utils.isSystemClass(c.getName()))) {
 				for (SootMethod m : c.getMethods()) {
@@ -69,7 +69,7 @@ public class Main {
 		}		
 				
 		test.generateApk();
-		
-				
+		appClasses = Scene.v().getApplicationClasses();
+		Utils.saveJimple(appClasses, dirOutput);
 	}
 }
