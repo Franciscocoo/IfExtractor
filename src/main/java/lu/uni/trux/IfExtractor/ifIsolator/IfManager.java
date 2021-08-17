@@ -9,7 +9,6 @@ import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
-import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.DirectedGraph;
@@ -18,11 +17,16 @@ import soot.toolkits.graph.SimpleDominatorsFinder;
 import soot.toolkits.graph.UnitGraph;
 import soot.util.Chain;
 
+/**
+ * Provides methods to retrieve the IfStmt in the application and isolate the block of Stmt include in the block
+ * Call as the ifBLock
+ * @author François JULLION
+ */
 public class IfManager {
 
 	/**
-	 * 
-	 * @return 
+	 * Find the ifStmt into the Classes and return all the information of the IfBlock
+	 * @return a IfPackage, containing all necessary informations about the IfStmt
 	 */
 	public static IfPackage getIf(IfStmt is) {
 		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
@@ -33,7 +37,7 @@ public class IfManager {
 						Body b = m.retrieveActiveBody();
 						for (Unit u : b.getUnits()) {
 							Stmt s = (Stmt) u;
-							if (s instanceof IfStmt) {
+							if (s.equals(is)) {
 								IfPackage res = new IfPackage(m, b, isolate(m, (IfStmt) s), c);
 								return res;
 							}
@@ -46,10 +50,10 @@ public class IfManager {
 	}
 	
 	/**
-	 * 
-	 * @param m
-	 * @param stmt
-	 * @return
+	 * Isolate all the Stmt contains into the IfBlock from the rest of the Body
+	 * @param m, SootMethod which contains the IfStmt
+	 * @param stmt, the IfStmt
+	 * @return a list of Stmt in the IfBlock
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static List<Stmt> isolate(SootMethod m, IfStmt stmt) {
@@ -65,9 +69,12 @@ public class IfManager {
 		branchLeft = getBranch(dg, branchLeft, left);
 		List<Stmt> branchRight = new ArrayList<Stmt>();
 		branchRight = getBranch(dg, branchRight, right);
+		// Left Union Right
 		List<Stmt> union = new ArrayList<Stmt>(branchLeft);
 		union.addAll(branchRight);
+		// Left Inter Right
 		List<Stmt> intersection = new ArrayList<Stmt>(branchLeft);
+		// (Left Union Right) exclude (Left Inter Right)
 		intersection.retainAll(branchRight);
 		List<Stmt> res = new ArrayList<Stmt>(union);
 		res.removeAll(intersection);
@@ -75,11 +82,11 @@ public class IfManager {
 	}
 
 	/**
-	 * 
-	 * @param dg
-	 * @param l
-	 * @param s
-	 * @return
+	 * Execute a DFS on a branch of the CFG
+	 * @param dg, the DirectedGraph of Stmt
+	 * @param l, the list of Stmt of the branch
+	 * @param s, the actual stmt of the branch
+	 * @return list of Stmt containing in the Branch
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static List<Stmt> getBranch(DirectedGraph dg, List<Stmt> l, Stmt s) {

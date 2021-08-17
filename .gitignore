@@ -2,6 +2,7 @@
 /tmp/
 /output/
 /.metadata/
+/src/main/java/lu/uni/trux/IfExtractor/Main.java
 .git
 .settings
 .classpath
