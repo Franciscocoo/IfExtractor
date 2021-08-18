@@ -19,13 +19,13 @@ You can download the release [here](https://google.com).
 ifExtractor take in input the Soot Stmt as IfStmt and produce in output a new apk.
 Here a example of code :  
 <pre>
-/* Create the ifExtractor with the path of the android platforms, the path of the apk to analyse and the path of the output folder */
+// Create the ifExtractor with the path of the android platforms, the path of the apk to analyse and the path of the output folder
 IfExtractor example = new IfExtractor(androidPath, apkPath, outputPath);
-// INSERT TRAITEMENT OF APk
-/* Add the IfStmt to the ifExtractor */
+/* Do your own treatement of the apk */
+// Add the IfStmt to the ifExtractor
 example.addLogicBomb(ifStmt);
 example.addLogicBombs(listOfIfStmt);
-/* Call the method to generate the apk */
+// Call the method to generate the apk
 example.generateApk();
 </pre>
 
