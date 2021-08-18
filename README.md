@@ -5,14 +5,16 @@ The goal of ifExtractor is to isolate and extract logical bomb in Android Malwar
 ## Getting Started
 
 ### Download
-* You can clone the repo to your project with the following command :
-<pre>
-git clone https://github.com/Franciscocoo/IfExtractor.git
-</pre>
-* You can download the release [here](https://google.com).
+You can download the release [here](https://google.com).
 
 ### Install
+* If you are using a IDE, you just have to had the file to the library in .
+Exemple : 
 
+* If you are using a CLI, add this option when you build your project :
+<pre>
+-classpath path/to/ifExtractor.jar
+</pre>
 
 ## How it works
 ifExtractor take in input the Soot Stmt as IfStmt.
