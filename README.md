@@ -5,12 +5,11 @@ The goal of ifExtractor is to isolate and extract logical bomb in Android Malwar
 ## Getting Started
 
 ### Download
-You can clone the repo to your project with the following command :
-<pre> 
+* You can clone the repo to your project with the following command :
+<pre>
 git clone https://github.com/Franciscocoo/IfExtractor.git
 </pre>
-
-You can download the release [here](https://google.com).
+* You can download the release [here](https://google.com).
 
 ### Install
 
