@@ -6,7 +6,7 @@ Written in Java and using [FlowDroid](https://github.com/secure-software-enginee
 ## Getting Started
 
 ### Download
-You can download the release [here](https://google.com).
+You can download the release [here](https://github.com/Franciscocoo/IfExtractor/releases/tag/1.0).
 
 ### Install
 * If you are using a IDE, you just have to had the library to the Java Build Path. 
