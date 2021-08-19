@@ -1,6 +1,6 @@
 # ifExtractor
-ifExtractor is a Open-Source librairy, made in Java.  
-The goal of ifExtractor is to isolate and extract logical bomb in Android Malware.
+ifExtractor is a extractor of Logical Bomb located inside Andoird Application. Based on the framework [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)  
+Written in Java, this library is Open-Source.
 
 ## Getting Started
 
@@ -17,6 +17,11 @@ You can download the release [here](https://google.com).
 
 ## How it works
 ifExtractor take in input the Soot Stmt as IfStmt and produce in output a new apk.
+Using the flowdroid framework, the library will create a new android Class named IfClass, which contains ifMethods.
+Each ifMethods contains 
+
+
+## How to use it
 Here a example of code :  
 <pre>
 // Create the ifExtractor with the path of the android platforms, the path of the apk to analyse and the path of the output folder
