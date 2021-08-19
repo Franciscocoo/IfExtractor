@@ -82,9 +82,10 @@ public class MainActivity extends ... {
 Finally, the apk is generated. When it's going to be executed, all the LogicalBomb are executed in priority to observe the behaviour.  
   
 ## How to use it
-Let's see the methods of the ifExtractor object.  
+Let's see the methods of the ifExtractor object :
 <pre>
-// Constructor with the paths of Android Platforms, apk and output folder
+/* Constructor with the paths of Android Platforms, apk and output folder
+   WARNING : this method create a instance of Soot */
 IfExtractor example = new IfExtractor(androidPath, apkPath, outputPath);
 
 // Add the IfStmt to the ifExtractor
