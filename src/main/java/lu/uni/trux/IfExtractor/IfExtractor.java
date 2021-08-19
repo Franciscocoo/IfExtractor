@@ -33,13 +33,13 @@ import soot.jimple.infoflow.android.manifest.ProcessManifest;
  */
 public class IfExtractor {
 	
-	/* Path of the Apk use as Input */
+	/* Path of the Apk */
 	private String dirApk;
 	
-	/* List of IfStmt containing logical Bombs */
+	/* List of IfStmt */
 	private List<IfStmt> logicBombs;
 	
-	/*  */
+	/* Logger object */
 	private Logger log;
 	
 	/**
@@ -54,6 +54,7 @@ public class IfExtractor {
 		logicBombs = new ArrayList<IfStmt>();
 		this.dirApk = dirApk;
 		Utils.initSoot(dirAnd, dirApk, dirOut);
+		log.info("Flowdroid is Initialized");
 	}
 	
 	/**
@@ -89,13 +90,15 @@ public class IfExtractor {
 	 */
 	protected void generateApk() throws IOException, XmlPullParserException {
 		/* Creating new Class */
+		log.info("Creating the ifClass");
 		SootClass ifClass = new SootClass("ifClass", Modifier.PUBLIC);
 		SootClass activity = Scene.v().loadClassAndSupport("android.app.Activity");
 		ifClass.setSuperclass(activity);
 		Scene.v().addClass(ifClass);
 		ifClass.setApplicationClass();
-
+		
 		/* Creating init<>() */
+		log.info("Creating the init Method");
 		MethodCreator.createInitMethod(ifClass);
 		
 		/* Creating all IfMethods */
@@ -110,7 +113,9 @@ public class IfExtractor {
 		List<Stmt> stmtBlock;
 		SootMethod m;
 		SootClass c;
+		log.info("Beginning the ifMethods creation");
 		for(IfPackage ifp : ifPackageList) {
+			/* Retrieve ifBlock and his infos */
 			oldBody = ifp.getBody();
 			stmtBlock = ifp.getBlock();
 			c = ifp.getClasse();
@@ -126,24 +131,30 @@ public class IfExtractor {
 			Set<Local> newLocalSet = DependenciesSolver.getLocalIfBlock(newStmtList, oldBody.getLocals());
 			// Create the ifMethod_n
 			MethodCreator.createIfMethod(ifClass, newLocalSet, newStmtList, n);
+			log.info("ifMethod" + n + " is created");
 		}
 		
-		/* Manifest editing */
+		/* Retrieving the main Activity of the apk*/
+		log.info("Retrieving the main Activity in the AndroidManifest.xml");
 		String mainActivity = getMainActivity();
+		log.info(mainActivity + "is the main Activity");
 		
 		/* Getting the class of the mainActivity */
 		SootClass mainActivityClass = null;
-		for(SootClass cl : Scene.v().getClasses()) {
+		for(SootClass cl : Scene.v().getApplicationClasses()) {
 			if(cl.getName().toString().equals(mainActivity)) {
 				mainActivityClass = cl;
 			}
 		}
 		
 		/* modify onCreate() */
+		log.info("Modifying the onCreate Method");
 		MethodCreator.modifyOnCreateMethod(mainActivityClass,ifClass,n);
 		
 		/* Write the apk */
+		log.info("Creating the apk");
 		PackManager.v().writeOutput();
+		log.info("Generation done");
 	}
 	
 	/**
@@ -152,19 +163,28 @@ public class IfExtractor {
 	 * @throws XmlPullParserException
 	 */
 	private String getMainActivity() throws IOException, XmlPullParserException {
+		@SuppressWarnings("resource")
 		ProcessManifest obj = new ProcessManifest(this.dirApk);
+		AXmlNode app = obj.getApplication();
 		String res = "";
-		for(AXmlNode act : obj.getActivities()) {
-			for(AXmlNode filters : act.getChildren()) {
-				List<AXmlNode> action = filters.getChildrenWithTag("action");
-				List<AXmlNode> category = filters.getChildrenWithTag("category");
-				if(action.size() == 1 && category.size()==1) {
-					AXmlNode actionNode = action.get(0);
-					AXmlNode categoryNode = category.get(0);
-					String val1 = actionNode.getAttribute("name").toString();
-					String val2 = categoryNode.getAttribute("name").toString();
-					if(val1.equals("name=\"android.intent.action.MAIN\"") && val2.equals("name=\"android.intent.category.LAUNCHER\"")) {
-						res = act.getAttribute("name").getValue().toString();
+		for(AXmlNode node : app.getChildren()) {
+			for(AXmlNode filters : node.getChildren()) {
+				if(filters.getTag().equals("intent-filter")) {
+					List<AXmlNode> action = filters.getChildrenWithTag("action");
+					List<AXmlNode> category = filters.getChildrenWithTag("category");
+					if(action.size() == 1 && category.size()==1) {
+						AXmlNode actionNode = action.get(0);
+						AXmlNode categoryNode = category.get(0);
+						String val1 = actionNode.getAttribute("name").toString();
+						String val2 = categoryNode.getAttribute("name").toString();
+						if(val1.equals("name=\"android.intent.action.MAIN\"") && val2.equals("name=\"android.intent.category.LAUNCHER\"")) {
+							if(node.getTag().equals("activity-alias")) {
+								res = node.getAttribute("targetActivity").getValue().toString();
+							} else {
+								res = node.getAttribute("name").getValue().toString();
+							}
+							return res;
+						}
 					}
 				}
 			}

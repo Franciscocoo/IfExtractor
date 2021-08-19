@@ -79,8 +79,20 @@ public class DependenciesSolver {
 				if (locals.contains(v1) && v1 instanceof Local) {
 					localsBlock.add((Local) v1);
 				}
-				if (locals.contains(v2) && v2 instanceof Local) {
+				for(ValueBox val: v1.getUseBoxes()) {
+					Value imm = val.getValue();
+					if(locals.contains(imm) && imm instanceof Local) {
+						localsBlock.add((Local) imm);
+					}
+				}
+				if(locals.contains(v2) && v2 instanceof Local) {
 					localsBlock.add((Local) v2);
+				}
+				for(ValueBox val : v2.getUseBoxes()) {
+					Value imm = val.getValue();
+					if(locals.contains(imm) && imm instanceof Local) {
+						localsBlock.add((Local) imm);
+					}
 				}
 			}
 			/* Identification */

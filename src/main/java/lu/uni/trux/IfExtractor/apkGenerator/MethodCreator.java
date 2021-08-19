@@ -18,9 +18,11 @@ import soot.Value;
 import soot.VoidType;
 import soot.jimple.AssignStmt;
 import soot.jimple.BreakpointStmt;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.GotoStmt;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
@@ -28,10 +30,10 @@ import soot.jimple.LookupSwitchStmt;
 import soot.jimple.MonitorStmt;
 import soot.jimple.NopStmt;
 import soot.jimple.NullConstant;
+import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.SpecialInvokeExpr;
-import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
@@ -93,20 +95,32 @@ public class MethodCreator {
 		for(int i=1; i<=n; i++) {
 			String methodName = "ifMethod" + i;
 			SootMethod ifMeth = ifClass.getMethodByName(methodName);
-			StaticInvokeExpr expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef());
-			if(ifMeth.getParameterCount()>=1) {
-				List<Value> args = new ArrayList<Value>();
+	 		Integer nbParamsIfMethods = ifMeth.getParameterCount();
+	 		List<Value> args = new ArrayList<Value>();
+			if(nbParamsIfMethods>=1) {
 				for(int j=0;j<ifMeth.getParameterCount();j++) {
 					NullConstant tmpArg = NullConstant.v();
 					args.add(tmpArg);
 				}
-				expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef(), args);
+			}
+			// Generate new InvokeStmt
+			InvokeExpr expr;
+			if(ifMeth.isStatic()) {
+				expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef());
+				if(nbParamsIfMethods>=1) {
+					expr = Jimple.v().newStaticInvokeExpr(ifMeth.makeRef(), args);
+				}
+			} else {
+				expr= Jimple.v().newVirtualInvokeExpr($r1, ifMeth.makeRef());
+				if(nbParamsIfMethods>=1) {
+					expr = Jimple.v().newVirtualInvokeExpr($r1, ifMeth.makeRef(), args);
+				}
+				
 			}
 			units.add(Jimple.v().newInvokeStmt(expr));
 		}
 		// return;
 		units.add(Jimple.v().newReturnVoidStmt());
-		System.out.println(onCreateBody);
 		onCreateBody.validate();
 	}
 	
@@ -133,7 +147,6 @@ public class MethodCreator {
 		Map<Stmt,Stmt> cloneMap = addStmt(ifMethodBody, stmtList);
 		/* Solve targets problems of the body */		
 		solveTargets(ifMethodBody, cloneMap);
-		System.out.println(ifMethodBody);
 		ifMethodBody.validate();
 	}
 	
@@ -159,6 +172,7 @@ public class MethodCreator {
 		UnitPatchingChain units = b.getUnits();
         List<Unit> generatedUnits = new ArrayList<>();
         Map<Stmt,Stmt> cloneMap = new HashMap<Stmt,Stmt>();
+        int counterParameter = 0;
 		for(Stmt s : l) {
 			/* Assignement */
 			if (s instanceof AssignStmt) {
@@ -168,9 +182,17 @@ public class MethodCreator {
 			}
 			/* Identification */
 			else if (s instanceof IdentityStmt) {
-				IdentityStmt identity = StmtCreator.createIdentity(s, b);
-				cloneMap.put(s, identity);
-				generatedUnits.add(identity);
+				/* Cut the caughtExceptionRef */
+				IdentityStmt id = (IdentityStmt) s;
+				Value rightOp = id.getRightOp();
+				if(rightOp instanceof CaughtExceptionRef == false) {
+					IdentityStmt identity = StmtCreator.createIdentity(s, b, counterParameter);
+					cloneMap.put(s, identity);
+					generatedUnits.add(identity);
+					if(rightOp instanceof ParameterRef) {
+						counterParameter++;
+					}
+				}
 			}
 			/* Go to */
 			else if(s instanceof GotoStmt) {

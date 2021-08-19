@@ -18,7 +18,7 @@ import soot.jimple.Stmt;
 import soot.util.Chain;
 
 /**
- * 
+ * Test class to find Ifstmt and execute the ifExtractor
  * @author François JULLION
  */
 public class Main {
@@ -28,7 +28,7 @@ public class Main {
 		String dirAndroid = "/home/student/Android-platforms/jars/stubs";
 
 		String directory = System.getProperty("user.dir");
-		String apkName = "IfExtraction_benchapp_1";
+		String apkName = "instagram";
 		String dirApk = directory + "/apk/" + apkName + ".apk";
 
 		String dirOutput = directory + "/output";
@@ -38,13 +38,12 @@ public class Main {
 		if(files != null && files.length>0) {
 			Arrays.asList(files).forEach(File::delete);
 		}
-
+		
 		IfExtractor test = new IfExtractor(dirAndroid, dirApk, dirOutput);
 		Chain<SootClass> appClasses = Scene.v().getApplicationClasses();
-		Utils.saveJimple(appClasses, dirOutput);
 		List<IfStmt> l = new ArrayList<IfStmt>();
 		for (SootClass c : appClasses) {
-			if(c.getName().equals("lu.uni.trux.ifExtraction_benchapp_1.Random")) {
+			if(c.getName().equals("com.instagram.ui.widget.emitter.PulseEmitter")) {
 				if (!(Utils.isSystemClass(c.getName()))) {
 					for (SootMethod m : c.getMethods()) {
 						if (m.isConcrete()) {
@@ -55,6 +54,7 @@ public class Main {
 								if (s instanceof IfStmt) {
 									is = (IfStmt)s;
 									l.add(is);
+									break;
 								}
 							}
 						}
@@ -64,6 +64,5 @@ public class Main {
 		}		
 		test.addLogicBombs(l);
 		test.generateApk();
-
 	}
 }

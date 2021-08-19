@@ -1,5 +1,6 @@
 package lu.uni.trux.IfExtractor.apkGenerator;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -262,7 +263,7 @@ public class StmtCreator {
 	 * @param b, the Body
 	 * @return new IdentityStmt
 	 */
-	protected static IdentityStmt createIdentity(Stmt s, Body b) {
+	protected static IdentityStmt createIdentity(Stmt s, Body b, int n) {
 		IdentityStmt newIdentityStmt;
 		IdentityStmt st = (IdentityStmt) s;
 		Local leftOp  = (Local) st.getLeftOp();
@@ -270,8 +271,9 @@ public class StmtCreator {
 		Value rightOp = (Value) st.getRightOp().clone();
 		if(rightOp instanceof ParameterRef) {
 			ParameterRef param = (ParameterRef) rightOp;
-			ParameterRef newParam = new ParameterRef(param.getType(), param.getIndex());
+			ParameterRef newParam = new ParameterRef(param.getType(), n);
 			List<Type> params = new ArrayList<Type>();
+			params.addAll(b.getMethod().getParameterTypes());
 			params.add(param.getType());
 			b.getMethod().setParameterTypes(params);
 			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, newParam);
@@ -279,8 +281,9 @@ public class StmtCreator {
 			ThisRef ref = (ThisRef) rightOp;
 			ThisRef newRef = Jimple.v().newThisRef((RefType) ref.getType());
 			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, newRef);
+			b.getMethod().setModifiers(Modifier.PUBLIC);
 		} else {
-			CaughtExceptionRef exceptRef = Jimple.v().newCaughtExceptionRef();
+			CaughtExceptionRef exceptRef = (CaughtExceptionRef) rightOp.clone();
 			newIdentityStmt = Jimple.v().newIdentityStmt(leftLocal, exceptRef);
 		}
 		return newIdentityStmt;

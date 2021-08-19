@@ -1,14 +1,9 @@
 package lu.uni.trux.IfExtractor.utils;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import soot.options.Options;
-import soot.util.Chain;
-import soot.SootMethod;
+import lu.uni.trux.IfExtractor.MyConfig;
 import soot.Unit;
 import soot.UnitPatchingChain;
 import soot.jimple.Stmt;
@@ -17,7 +12,6 @@ import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.Body;
-import soot.SootClass;
 
 /**
  * Utils Methods
@@ -49,49 +43,10 @@ public class Utils {
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
         config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
         SetupApplication app = new SetupApplication(config);
+        app.setSootConfig(new MyConfig());
         app.constructCallgraph();
-        Options.v().set_process_multiple_dex(true);
-		Options.v().set_output_format(Options.output_format_dex);
-		Options.v().set_output_dir(dirOutput);
 	}
-	
-	/**
-	 * Save all SootClass as .jimple files
-	 * @param appClasses, Chain of all SootClass
-	 * @param dirOutput, String which represents the output folder path
-	 */
-	public static void saveJimple(Chain<SootClass> appClasses, String dirOutput) {
-		for(SootClass c : appClasses) {
-			if(!isSystemClass(c.getName())) {
-				try {
-					stringToJimple(c,dirOutput);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Save a String to a jimple File
-	 * @param cls, SootClass
-	 * @param dirOutput, String which represents the output folder path
-	 * @throws IOException
-	 */
-	private static void stringToJimple(SootClass cls, String dirOutput) throws IOException{
-		String filename = dirOutput + "/" + cls.getName() + ".jmpl";
-		FileWriter filewrite = new FileWriter(filename);
-		PrintWriter printwrite = new PrintWriter(filewrite);
-		cls.setApplicationClass();
-		for(SootMethod meth: cls.getMethods()) {
-			if(meth.isConcrete()) {
-				Body b = meth.retrieveActiveBody();
-				printwrite.write(b.toString());
-			}
-		}
-		printwrite.close();
-	}
-	
+		
 	/**
 	 * Ordering a list of Stmt based on a Body
 	 * @param b, Body
