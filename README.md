@@ -45,7 +45,7 @@ public void ifClass extends MainActivity {
   
   ...  
     
-  public ifMethodn(...) {  
+  public ifMethodN(...) {  
     /* Contains if Block of the LogicBomb_n */  
   }  
     
@@ -72,21 +72,20 @@ public class MainActivity extends ... {
 
         ...
 
-        virtualinvoke $r1.< ifClass: void ifMethodn() >();
+        virtualinvoke $r1.< ifClass: void ifMethodN() >();
 
         return;
     }
   
   }
 </pre>
-Finally, the apk is generated.When it's going to be executed, all the LogicalBomb are executed in priority to observe the behaviour.  
+Finally, the apk is generated. When it's going to be executed, all the LogicalBomb are executed in priority to observe the behaviour.  
   
 ## How to use it
-Here a example of code :  
+Let's see the methods of the ifExtractor object.  
 <pre>
-// Create the ifExtractor with the path of the android platforms, the path of the apk to analyse and the path of the output folder
+// Constructor with the paths of Android Platforms, apk and output folder
 IfExtractor example = new IfExtractor(androidPath, apkPath, outputPath);
-/* Do your own treatement of the apk */
 // Add the IfStmt to the ifExtractor
 example.addLogicBomb(ifStmt);
 example.addLogicBombs(listOfIfStmt);
