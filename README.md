@@ -86,9 +86,11 @@ Let's see the methods of the ifExtractor object.
 <pre>
 // Constructor with the paths of Android Platforms, apk and output folder
 IfExtractor example = new IfExtractor(androidPath, apkPath, outputPath);
+
 // Add the IfStmt to the ifExtractor
 example.addLogicBomb(ifStmt);
 example.addLogicBombs(listOfIfStmt);
+
 // Call the method to generate the apk
 example.generateApk();
 </pre>
