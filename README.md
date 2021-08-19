@@ -1,6 +1,6 @@
 # ifExtractor
-ifExtractor is a extractor of Logical Bomb located inside Andoird Application. Based on the framework [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)  
-Written in Java, this library is Open-Source.
+ifExtractor is a extractor of Logical Bomb located inside Andoird Application.  
+Written in Java and using the the framework [FlowDroid](https://github.com/secure-software-engineering/FlowDroid) , this library is Open-Source.
 
 ## Getting Started
 
