@@ -1,6 +1,6 @@
 # ifExtractor
 ifExtractor is a extractor of Logical Bomb located inside Andoird Application.
-This extraction is made with static analysis of Jimple Bytecode and instrumentation of this same Jimple Bytecode.
+This extraction is made with static analysis and instrumentation of Jimple Bytecode.
 Written in Java and using [FlowDroid](https://github.com/secure-software-engineering/FlowDroid) , this library is Open-Source.
 
 ## Getting Started
